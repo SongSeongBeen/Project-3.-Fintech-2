@@ -1,0 +1,33 @@
+package fintech2.easypay.audit.entity;
+
+public enum AuditEventType {
+    // 회원 관련
+    MEMBER_SIGNUP,
+    MEMBER_SIGNIN,
+    MEMBER_SIGNIN_FAILED,
+    MEMBER_PROFILE_UPDATE,
+    MEMBER_WITHDRAW,
+    MEMBER_ACCOUNT_LOCKED,
+    
+    // 계좌 관련
+    ACCOUNT_CREATE,
+    ACCOUNT_DEPOSIT,
+    ACCOUNT_WITHDRAW,
+    ACCOUNT_BALANCE_RESET,
+    
+    // 송금 관련
+    TRANSFER_REQUEST,
+    TRANSFER_SUCCESS,
+    TRANSFER_FAILED,
+    
+    // 결제 관련
+    PAYMENT_REQUEST,
+    PAYMENT_SUCCESS,
+    PAYMENT_FAILED,
+    PAYMENT_CANCEL,
+    PAYMENT_REFUND,
+    
+    // 시스템 관련
+    SYSTEM_ERROR,
+    SECURITY_VIOLATION
+}
