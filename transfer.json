@@ -1,6 +1,6 @@
 {
-  "senderAccountNumber": "EP4FB3CBFF69",
-  "receiverAccountNumber": "EP000000001",
+  "senderAccountNumber": "EPCECD934BC9",
+  "receiverAccountNumber": "EP977ADD7979",
   "amount": 50000,
   "memo": "테스트 송금"
 }
