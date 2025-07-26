@@ -6,7 +6,7 @@ EasyPay는 사용자 친화적인 간편송금 및 결제 서비스를 제공하
 ### 주요 기능
 - 👤 **회원 관리**: 전화번호 기반 회원가입, JWT 토큰 인증
 - 💳 **계좌 관리**: 계좌 생성, 조회, 잔액 관리
-- 💸 **간편 결제**: 가맹점 결제, 결제 내역 조회
+- 💸 **간편 결제**: 거래처 결제, 결제 내역 조회
 - 💰 **송금 서비스**: 계좌 간 실시간 송금, 송금 상태 확인
 - 📊 **거래 내역**: 송금/입금 내역 조회, 페이지네이션 지원
 - 🔔 **알림 서비스**: 거래 알림, 비동기 알림 처리
@@ -184,54 +184,26 @@ Resolves: #123
 
 ## 프로젝트 구조
 ```
-Project-3.-Fintech-2/
-├── src/
-│   ├── main/
-│   │   ├── java/fintech2/easypay/
-│   │   │   ├── account/        # 계좌 관리 모듈
-│   │   │   ├── audit/          # 감사 로깅 모듈
-│   │   │   ├── auth/           # 인증/인가 모듈
-│   │   │   ├── common/         # 공통 유틸리티
-│   │   │   ├── config/         # 설정 클래스
-│   │   │   ├── member/         # 회원 관리 모듈
-│   │   │   ├── payment/        # 결제 처리 모듈
-│   │   │   └── transfer/       # 송금 처리 모듈
-│   │   └── resources/
-│   │       ├── application.yml
-│   │       ├── application-dev.yml
-│   │       └── application-prod.yml
-│   └── test/                   # 테스트 코드
-├── gradle/                     # Gradle 래퍼
-├── scripts/                    # 유틸리티 스크립트
-├── .gitignore
-├── .gitattributes
-├── build.gradle.kts           # 빌드 설정
-├── settings.gradle.kts        # 프로젝트 설정
-└── README.md                  # 프로젝트 문서
-
+src/main/java/fintech2/easypay/
+├── account/           # 계좌 관리
+├── member/            # 회원 관리  
+├── payment/           # 결제 처리
+├── transfer/          # 송금 처리
+├── auth/              # 인증/인가
+├── audit/             # 감사 로깅
+├── common/            # 공통 컴포넌트
+└── config/            # 설정 클래스
 ```
 
 ## 환경별 설정
 
 ### 개발 환경 (dev)
 - **Database**: H2 In-Memory
-- **Port**: 8080
-- **DDL**: create-drop (자동 생성/삭제)
-- **특징**:
-  - 디버그 로깅 활성화
-  - H2 Console 활성화 (/h2-console)
-  - Mock 외부 서비스 사용
-  - SQL 쿼리 로깅
+- **특징**: H2 Console 활성화, 디버그 로깅, Mock 서비스
 
-### 운영 환경 (prod)
+### 운영 환경 (prod)  
 - **Database**: MySQL 8.0
-- **Port**: 8080
-- **DDL**: validate (스키마 검증만)
-- **특징**:
-  - 최적화된 로깅 (INFO 레벨)
-  - HikariCP 커넥션 풀 설정
-  - 환경변수 기반 설정 (DB_HOST, DB_USERNAME 등)
-  - JWT 시크릿 외부 주입
+- **특징**: HikariCP 커넥션 풀, 환경변수 설정, 최적화된 로깅
 
 ## 주요 API 엔드포인트
 
@@ -268,25 +240,9 @@ Project-3.-Fintech-2/
 - **감사 로깅**: 모든 거래 이력 추적
 
 ## 아키텍처 특징
-
-### 모듈 구조
-- **account**: 계좌 관리 (Account, AccountService)
-- **member**: 회원 관리 (Member, MemberService)
-- **payment**: 결제 처리 (Payment, PaymentService)
-- **transfer**: 송금 처리 (Transfer, TransferService)
-- **auth**: 인증/인가 (JWT, CustomUserDetails)
-- **audit**: 감사 로깅 (AuditLog, Notification)
-- **common**: 공통 컴포넌트 (ApiResponse, BaseEntity)
-
-### 비동기 처리
-- 알림 서비스 비동기 처리
-- 송금 상태 확인 스케줄링
-- @Async 기반 백그라운드 작업
-
-### Mock 서비스
-- **MockBankingApiService**: 외부 은행 API 시뮬레이션
-- **MockPaymentGatewayService**: 결제 게이트웨이 시뮬레이션
-- 다양한 성공/실패 시나리오 제공
+- **모듈형 구조**: 도메인별 패키지 분리
+- **비동기 처리**: 알림 및 외부 API 호출
+- **Mock 서비스**: 개발/테스트용 외부 API 시뮬레이션
 
 ## 팀 정보
 - **프로젝트명**: EasyPay
