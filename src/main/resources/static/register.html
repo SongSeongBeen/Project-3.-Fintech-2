@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>EasyPay - 회원가입</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <script defer src="/js/auth.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏦 EasyPay</h1>
+            <p>회원가입</p>
+        </div>
+
+        <div class="login-form">
+            <h2>회원가입</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="regPhoneNumber">휴대폰 번호</label>
+                    <input type="tel" id="regPhoneNumber" placeholder="010-1234-5678" required>
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">비밀번호 (6자 이상)</label>
+                    <input type="password" id="regPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="regName">이름</label>
+                    <input type="text" id="regName" placeholder="홍길동" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">
+                    <span class="loading" id="registerLoading"></span>
+                    회원가입
+                </button>
+            </form>
+            
+            <div class="signup-link">
+                <p>이미 계정이 있으신가요? <a href="javascript:goToLogin()">로그인하기</a></p>
+            </div>
+
+            <div class="alert" id="registerAlert"></div>
+        </div>
+    </div>
+</body>
+</html> 

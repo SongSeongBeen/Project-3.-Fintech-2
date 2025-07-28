@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<ruleset name="EasyPay PMD Rules"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>
+        PMD 규칙 설정 for EasyPay 프로젝트
+    </description>
+
+    <!-- 기본 규칙들 -->
+    <rule ref="category/java/bestpractices.xml">
+        <priority>3</priority>
+    </rule>
+    
+    <rule ref="category/java/codestyle.xml">
+        <priority>4</priority>
+    </rule>
+    
+    <rule ref="category/java/design.xml">
+        <priority>3</priority>
+    </rule>
+    
+    <rule ref="category/java/documentation.xml">
+        <priority>4</priority>
+    </rule>
+    
+    <rule ref="category/java/errorprone.xml">
+        <priority>2</priority>
+    </rule>
+    
+    <rule ref="category/java/multithreading.xml">
+        <priority>3</priority>
+    </rule>
+    
+    <rule ref="category/java/performance.xml">
+        <priority>3</priority>
+    </rule>
+    
+    <rule ref="category/java/security.xml">
+        <priority>1</priority>
+    </rule>
+
+    <!-- 제외할 규칙들 -->
+    <rule ref="category/java/codestyle.xml/AtLeastOneConstructor">
+        <priority>5</priority>
+    </rule>
+    
+    <rule ref="category/java/codestyle.xml/OnlyOneReturn">
+        <priority>5</priority>
+    </rule>
+
+</ruleset> 
