@@ -25,10 +25,12 @@ public class AlarmService {
 
     // 시스템 알람 (관리자용 - 시스템 에러, 보안 이슈 등)
     public void sendSystemAlert(String service, String message, Exception ex) {
-        log.error("[SYSTEM_ALERT] Service: {}, Error: {}", service, message, ex);
+        String sanitizedService = sanitizeLogMessage(service);
+        String sanitizedMessage = sanitizeLogMessage(message);
+        log.error("[SYSTEM_ALERT] Service: {}, Error: {}", sanitizedService, sanitizedMessage, ex);
         
         // 관리자에게 시스템 에러 알림
-        sendAdminNotification("SYSTEM_ERROR", service + ": " + message, ex);
+        sendAdminNotification("SYSTEM_ERROR", sanitizedService + ": " + sanitizedMessage, ex);
         
         // TODO: Slack 웹훅 전송
         // TODO: 이메일 알림 전송
@@ -37,7 +39,10 @@ public class AlarmService {
 
     // 비즈니스 이벤트 알람 (사용자용 - 거래내역, 잔액 변동 등)
     public void sendBusinessEvent(String eventType, String userId, String description) {
-        log.info("[BUSINESS_EVENT] Type: {}, User: {}, Description: {}", eventType, userId, description);
+        String sanitizedEventType = sanitizeLogMessage(eventType);
+        String sanitizedUserId = sanitizeLogMessage(userId);
+        String sanitizedDescription = sanitizeLogMessage(description);
+        log.info("[BUSINESS_EVENT] Type: {}, User: {}, Description: {}", sanitizedEventType, sanitizedUserId, sanitizedDescription);
         
         // 사용자에게 비즈니스 이벤트 알림
         sendUserNotification(userId, eventType, description);
@@ -370,5 +375,16 @@ public class AlarmService {
         // TODO: 관리자에게 Slack 알림
         // TODO: 관리자에게 이메일 알림
         // TODO: 관리자 대시보드에 표시
+    }
+    
+    /**
+     * 로그 메시지에서 CRLF 문자를 제거하여 로그 주입 취약점을 방지합니다.
+     */
+    private String sanitizeLogMessage(String message) {
+        if (message == null) {
+            return null;
+        }
+        // CRLF 문자 제거
+        return message.replaceAll("[\r\n]", " ");
     }
 } 

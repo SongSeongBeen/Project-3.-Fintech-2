@@ -82,7 +82,11 @@ public class TransferService {
                 response.toString()
             );
 
-            log.info("송금 완료: {} -> {}, 금액: {}, 송금ID: {}", fromAccountNumber, toAccountNumber, amount, transferId);
+            log.info("송금 완료: {} -> {}, 금액: {}, 송금ID: {}", 
+                sanitizeLogMessage(fromAccountNumber), 
+                sanitizeLogMessage(toAccountNumber), 
+                amount, 
+                sanitizeLogMessage(transferId));
             return ResponseEntity.ok(response);
 
         } catch (AccountNotFoundException e) {
@@ -92,7 +96,7 @@ public class TransferService {
             auditLogService.logError("TRANSFER", "ACCOUNT", transferId, "잔액 부족: " + e.getMessage(), e);
             throw e;
         } catch (Exception e) {
-            log.error("송금 중 오류 발생: {}", e.getMessage(), e);
+            log.error("송금 중 오류 발생: {}", sanitizeLogMessage(e.getMessage()), e);
             auditLogService.logError("TRANSFER", "ACCOUNT", transferId, "송금 실패: " + e.getMessage(), e);
             throw new RuntimeException("송금 처리 중 오류가 발생했습니다", e);
         }
@@ -118,9 +122,20 @@ public class TransferService {
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            log.error("송금 내역 조회 중 오류 발생: {}", e.getMessage(), e);
+            log.error("송금 내역 조회 중 오류 발생: {}", sanitizeLogMessage(e.getMessage()), e);
             auditLogService.logError("TRANSFER_HISTORY", "ACCOUNT", accountNumber, "송금 내역 조회 실패", e);
             throw new RuntimeException("송금 내역 조회 중 오류가 발생했습니다", e);
         }
+    }
+    
+    /**
+     * 로그 메시지에서 CRLF 문자를 제거하여 로그 주입 취약점을 방지합니다.
+     */
+    private String sanitizeLogMessage(String message) {
+        if (message == null) {
+            return null;
+        }
+        // CRLF 문자 제거
+        return message.replaceAll("[\r\n]", " ");
     }
 } 

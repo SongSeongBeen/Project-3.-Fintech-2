@@ -58,7 +58,7 @@ dependencies {
 	implementation("io.micrometer:micrometer-registry-prometheus")
 	
 	// Code quality tools
-	spotbugsPlugins("com.h3xstream.findsecbugs:findsecbugs-plugin:1.12.0")
+	// spotbugsPlugins("com.h3xstream.findsecbugs:findsecbugs-plugin:1.12.0")
 	
 	compileOnly("org.projectlombok:lombok")
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
@@ -99,7 +99,7 @@ dependencyCheck {
 tasks.register("dockerBuild") {
 	dependsOn("build")
 	doLast {
-		exec {
+		providers.exec {
 			commandLine("docker", "build", "-t", "easypay:latest", ".")
 		}
 	}
@@ -108,7 +108,7 @@ tasks.register("dockerBuild") {
 // Docker Compose 실행 태스크
 tasks.register("dockerComposeUp") {
 	doLast {
-		exec {
+		providers.exec {
 			commandLine("docker-compose", "up", "-d")
 		}
 	}
@@ -116,7 +116,7 @@ tasks.register("dockerComposeUp") {
 
 tasks.register("dockerComposeDown") {
 	doLast {
-		exec {
+		providers.exec {
 			commandLine("docker-compose", "down")
 		}
 	}

@@ -63,6 +63,7 @@ public class AccountService {
      * 잔액 변경 (기존 API 호환성을 위해 유지, 내부적으로 BalanceService 사용)
      * @deprecated 새로운 비즈니스 로직에서는 BalanceService를 직접 사용하세요
      */
+    @Deprecated
     @Transactional
     public ResponseEntity<?> updateBalance(String accountNumber, BigDecimal amount, String transactionTypeStr, String description, String userId) {
         try {

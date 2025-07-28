@@ -26,17 +26,20 @@
     <suppress>
         <notes>Lombok은 컴파일 타임에만 사용됩니다.</notes>
         <gav>org.projectlombok:lombok</gav>
+        <cve>CVE-2021-21350</cve>
     </suppress>
     
     <!-- 테스트 라이브러리들 -->
     <suppress>
         <notes>테스트 라이브러리들은 운영 환경에서 사용되지 않습니다.</notes>
         <gav>org.junit.*:*</gav>
+        <cve>CVE-2021-21350</cve>
     </suppress>
     
     <suppress>
         <notes>테스트 라이브러리들입니다.</notes>
         <gav>org.mockito:*</gav>
+        <cve>CVE-2021-21350</cve>
     </suppress>
     
 </suppressions> 

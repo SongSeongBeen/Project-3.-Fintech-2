@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -168,7 +169,8 @@ public class AuthService {
 
     private String generateAccountNumber() {
         // 예시: VA + 8자리 랜덤 + 2자리 체크섬
-        String num = String.valueOf((long)(Math.random() * 1_0000_0000L) + 10_000_000L);
+        SecureRandom secureRandom = new SecureRandom();
+        String num = String.valueOf(secureRandom.nextLong(10_000_000L, 99_999_999L));
         String base = "VA" + num;
         String checksum = String.valueOf((base.hashCode() & 0xFF));
         return base + checksum;

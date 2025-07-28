@@ -83,8 +83,15 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
         
+        // 외부 변경 가능 객체 문제 해결을 위해 설정을 복사
+        CorsConfiguration immutableConfiguration = new CorsConfiguration();
+        immutableConfiguration.setAllowedOriginPatterns(configuration.getAllowedOriginPatterns());
+        immutableConfiguration.setAllowedMethods(configuration.getAllowedMethods());
+        immutableConfiguration.setAllowedHeaders(configuration.getAllowedHeaders());
+        immutableConfiguration.setAllowCredentials(configuration.getAllowCredentials());
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/**", immutableConfiguration);
         return source;
     }
 } 
