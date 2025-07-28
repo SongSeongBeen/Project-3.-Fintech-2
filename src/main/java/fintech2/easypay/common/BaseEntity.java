@@ -1,4 +1,4 @@
-package fintech2.easypay.payment.common;
+package fintech2.easypay.common;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 @Getter
-public abstract class PaymentBaseEntity {
+public abstract class BaseEntity {
     
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
