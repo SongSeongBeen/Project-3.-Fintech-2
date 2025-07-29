@@ -96,46 +96,10 @@ jobs:
         path: build/reports/pmd/
         retention-days: 30
 
-  # 보안 검사 (PR용)
-  security-scan:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Set up JDK ${{ env.JAVA_VERSION }}
-      uses: actions/setup-java@v4
-      with:
-        java-version: ${{ env.JAVA_VERSION }}
-        distribution: 'temurin'
-        cache: 'gradle'
-        
-    - name: Cache Gradle packages
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle-
-          
-    - name: Run OWASP dependency check
-      run: ./gradlew dependencyCheckAnalyze
-      
-    - name: Upload security results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: security-results
-        path: build/reports/dependency-check/
-        retention-days: 30
-
   # PR 요약 알림
   pr-summary:
     runs-on: ubuntu-latest
-    needs: [test-and-build, code-quality, security-scan]
+    needs: [test-and-build, code-quality]
     if: github.event_name == 'pull_request'
     
     steps:
@@ -144,5 +108,5 @@ jobs:
         echo "✅ EasyPay PR Checks Completed!"
         echo "📊 Test Results: Available in artifacts"
         echo "🔍 Code Quality: SpotBugs & PMD results uploaded"
-        echo "🔒 Security Scan: OWASP dependency check completed"
-        echo "📝 Ready for code review!" 
+        echo "📝 Ready for code review!"
+        echo "💡 Security scan will run on deployment or weekly" 

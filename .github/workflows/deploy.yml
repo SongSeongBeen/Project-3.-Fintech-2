@@ -46,10 +46,46 @@ jobs:
         name: easypay-build
         path: build/libs/*.jar
 
+  # 보안 스캔 (배포 전 필수)
+  security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK ${{ env.JAVA_VERSION }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        cache: 'gradle'
+        
+    - name: Cache Gradle packages
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
+    - name: Run OWASP dependency check
+      run: ./gradlew dependencyCheckAnalyze
+      
+    - name: Upload security results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-results
+        path: build/reports/dependency-check/
+        retention-days: 30
+
   # Docker 이미지 빌드 및 푸시
   docker-build:
     runs-on: ubuntu-latest
-    needs: [pre-deploy-test]
+    needs: [pre-deploy-test, security-scan]
     
     steps:
     - name: Checkout code
@@ -86,6 +122,7 @@ jobs:
       run: |
         echo "🚀 EasyPay Deployment Completed!"
         echo "📦 Docker Image: ${{ secrets.DOCKER_USERNAME }}/easypay:latest"
+        echo "🔒 Security Scan: OWASP dependency check completed"
         echo "🔗 GitHub Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         echo "📊 Build Artifacts: Available in artifacts"
         echo "✅ Ready for production deployment!" 
