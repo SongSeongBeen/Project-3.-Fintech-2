@@ -24,26 +24,13 @@ jobs:
       with:
         java-version: ${{ env.JAVA_VERSION }}
         distribution: 'temurin'
-        cache: 'gradle'
         
     - name: Setup Gradle
       uses: gradle/gradle-build-action@v2
       with:
         gradle-version: ${{ env.GRADLE_VERSION }}
+        arguments: test
         
-    - name: Cache Gradle packages
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle-
-          
-    - name: Run tests
-      run: ./gradlew test
-      
     - name: Build application
       run: ./gradlew build -x test
       
@@ -79,13 +66,8 @@ jobs:
       uses: gradle/gradle-build-action@v2
       with:
         gradle-version: ${{ env.GRADLE_VERSION }}
+        arguments: spotbugsMain pmdMain
         
-    - name: Run SpotBugs
-      run: ./gradlew spotbugsMain
-      
-    - name: Run PMD
-      run: ./gradlew pmdMain
-      
     - name: Upload SpotBugs results
       uses: actions/upload-artifact@v4
       if: always()
@@ -120,10 +102,8 @@ jobs:
       uses: gradle/gradle-build-action@v2
       with:
         gradle-version: ${{ env.GRADLE_VERSION }}
+        arguments: dependencyCheckAnalyze
         
-    - name: Run OWASP dependency check
-      run: ./gradlew dependencyCheckAnalyze
-      
     - name: Upload security results
       uses: actions/upload-artifact@v4
       if: always()
