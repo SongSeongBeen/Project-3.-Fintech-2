@@ -19,8 +19,19 @@ spring:
       enabled: true
       path: /h2-console
 
+
+server:
+  port: 8090
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+
 jwt:
   secret: mySecretKey123456789012345678901234567890123456789012345678901234567890
+  expiration:
+    access: 3600000       # Access Token 유효 시간 (1시간)
+    refresh: 2592000000   # Refresh Token 유효 시간 (30일)
 
 logging:
   level:
