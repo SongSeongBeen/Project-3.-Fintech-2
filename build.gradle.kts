@@ -15,7 +15,7 @@ version = "0.0.1-SNAPSHOT"
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
+		languageVersion.set(JavaLanguageVersion.of(21))
 	}
 }
 
@@ -38,28 +38,25 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-redis")
 	implementation("org.springframework.boot:spring-boot-starter-cache")
 	implementation("org.flywaydb:flyway-core")
-	
+
 	// JWT
 	implementation("io.jsonwebtoken:jjwt-api:0.12.3")
 	implementation("io.jsonwebtoken:jjwt-impl:0.12.3")
 	implementation("io.jsonwebtoken:jjwt-jackson:0.12.3")
-	
+
 	// Database
 	runtimeOnly("com.h2database:h2")
 	runtimeOnly("org.postgresql:postgresql")
-	
+
 	// Swagger
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
-	
+
 	// BCrypt
 	implementation("org.springframework.security:spring-security-crypto")
-	
+
 	// Monitoring
 	implementation("io.micrometer:micrometer-registry-prometheus")
-	
-	// Code quality tools
-	// spotbugsPlugins("com.h3xstream.findsecbugs:findsecbugs-plugin:1.12.0")
-	
+
 	compileOnly("org.projectlombok:lombok")
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	annotationProcessor("org.projectlombok:lombok")
@@ -72,65 +69,64 @@ tasks.withType<Test> {
 	useJUnitPlatform()
 }
 
-// SpotBugs 설정
+// SpotBugs 플러그인 전체 설정 (Extension)
 spotbugs {
 	toolVersion.set("4.8.3")
 	effort.set(Effort.MAX)
 	reportLevel.set(Confidence.MEDIUM)
 	excludeFilter.set(file("$projectDir/config/spotbugs/exclude.xml"))
-	// 실제 코드 품질 검사 활성화
-	ignoreFailures.set(false)
+	// ignoreFailures 속성은 Task에서만!
 }
 
-// PMD 설정
+// SpotBugs Task별 설정 (여기서 ignoreFailures 가능)
+tasks.withType<com.github.spotbugs.snom.SpotBugsTask> {
+	ignoreFailures = false  // true로 하면 에러 무시
+}
+
+// PMD 플러그인 전체 설정 (Extension)
 pmd {
 	toolVersion = "6.55.0"
 	ruleSetFiles = files("$projectDir/config/pmd/ruleset.xml")
 	ruleSets = listOf()
-	// 실제 코드 품질 검사 활성화
-	ignoreFailures.set(false)
+	// ignoreFailures 속성은 Task에서만!
 }
 
-// SpotBugs 태스크 설정
-tasks.withType<com.github.spotbugs.snom.SpotBugsTask> {
-	ignoreFailures.set(false)
-}
-
-// PMD 태스크 설정
+// PMD Task별 설정 (여기서 ignoreFailures 가능)
 tasks.withType<org.gradle.api.plugins.quality.Pmd> {
-	ignoreFailures.set(false)
+	ignoreFailures = false  // true로 하면 에러 무시
 }
 
 // OWASP Dependency Check 설정
 dependencyCheck {
-    formats = listOf("HTML", "JSON")
-    outputDirectory = "$buildDir/reports/dependency-check"
-    scanSet = listOf(file("$projectDir"))
-    suppressionFile = "$projectDir/config/dependency-check/suppressions.xml"
+	formats = listOf("HTML", "JSON")
+	outputDirectory = "$buildDir/reports/dependency-check"
+	scanSet = listOf(file("$projectDir"))
+	suppressionFile = "$projectDir/config/dependency-check/suppressions.xml"
 }
 
-// Docker 이미지 빌드 태스크
+// Docker 이미지 빌드 Task
 tasks.register("dockerBuild") {
 	dependsOn("build")
 	doLast {
-		providers.exec {
+		exec {
 			commandLine("docker", "build", "-t", "easypay:latest", ".")
 		}
 	}
 }
 
-// Docker Compose 실행 태스크
+// Docker Compose Up Task
 tasks.register("dockerComposeUp") {
 	doLast {
-		providers.exec {
+		exec {
 			commandLine("docker-compose", "up", "-d")
 		}
 	}
 }
 
+// Docker Compose Down Task
 tasks.register("dockerComposeDown") {
 	doLast {
-		providers.exec {
+		exec {
 			commandLine("docker-compose", "down")
 		}
 	}
