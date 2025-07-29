@@ -35,6 +35,9 @@ public class AuthService {
     private final AlarmService alarmService;
 
     private static final Pattern PHONE_PATTERN = Pattern.compile("^010-\\d{4}-\\d{4}$");
+    
+    // SecureRandom 객체를 클래스 필드로 한 번만 생성하여 재사용
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     @Transactional
     public ResponseEntity<?> register(RegisterRequest req) {
@@ -169,8 +172,8 @@ public class AuthService {
 
     private String generateAccountNumber() {
         // 예시: VA + 8자리 랜덤 + 2자리 체크섬
-        SecureRandom secureRandom = new SecureRandom();
-        String num = String.valueOf(secureRandom.nextLong(10_000_000L, 99_999_999L));
+        // 클래스 필드의 SECURE_RANDOM을 재사용
+        String num = String.valueOf(SECURE_RANDOM.nextLong(10_000_000L, 99_999_999L));
         String base = "VA" + num;
         String checksum = String.valueOf((base.hashCode() & 0xFF));
         return base + checksum;

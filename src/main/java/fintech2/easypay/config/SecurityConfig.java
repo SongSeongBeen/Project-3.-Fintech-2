@@ -19,6 +19,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.ArrayList;
 
 @Configuration
 @EnableWebSecurity
@@ -83,11 +84,11 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
         
-        // 외부 변경 가능 객체 문제 해결을 위해 설정을 복사
+        // 외부 변경 가능 객체 문제 해결을 위해 불변 객체로 복사
         CorsConfiguration immutableConfiguration = new CorsConfiguration();
-        immutableConfiguration.setAllowedOriginPatterns(configuration.getAllowedOriginPatterns());
-        immutableConfiguration.setAllowedMethods(configuration.getAllowedMethods());
-        immutableConfiguration.setAllowedHeaders(configuration.getAllowedHeaders());
+        immutableConfiguration.setAllowedOriginPatterns(new ArrayList<>(configuration.getAllowedOriginPatterns()));
+        immutableConfiguration.setAllowedMethods(new ArrayList<>(configuration.getAllowedMethods()));
+        immutableConfiguration.setAllowedHeaders(new ArrayList<>(configuration.getAllowedHeaders()));
         immutableConfiguration.setAllowCredentials(configuration.getAllowCredentials());
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

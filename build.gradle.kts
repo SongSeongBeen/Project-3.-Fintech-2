@@ -5,7 +5,7 @@ plugins {
 	java
 	id("org.springframework.boot") version "3.5.3"
 	id("io.spring.dependency-management") version "1.1.7"
-	id("org.owasp.dependencycheck") version "8.4.3"
+	id("org.owasp.dependencycheck") version "12.1.0"
 	id("com.github.spotbugs") version "6.0.4"
 	id("pmd")
 }
@@ -78,6 +78,8 @@ spotbugs {
 	effort.set(Effort.MAX)
 	reportLevel.set(Confidence.MEDIUM)
 	excludeFilter.set(file("$projectDir/config/spotbugs/exclude.xml"))
+	// 실제 코드 품질 검사 활성화
+	ignoreFailures.set(false)
 }
 
 // PMD 설정
@@ -85,6 +87,18 @@ pmd {
 	toolVersion = "6.55.0"
 	ruleSetFiles = files("$projectDir/config/pmd/ruleset.xml")
 	ruleSets = listOf()
+	// 실제 코드 품질 검사 활성화
+	ignoreFailures.set(false)
+}
+
+// SpotBugs 태스크 설정
+tasks.withType<com.github.spotbugs.snom.SpotBugsTask> {
+	ignoreFailures.set(false)
+}
+
+// PMD 태스크 설정
+tasks.withType<org.gradle.api.plugins.quality.Pmd> {
+	ignoreFailures.set(false)
 }
 
 // OWASP Dependency Check 설정

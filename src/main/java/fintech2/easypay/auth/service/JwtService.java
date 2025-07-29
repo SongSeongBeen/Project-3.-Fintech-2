@@ -31,8 +31,11 @@ public class JwtService {
     }
 
     public String generateToken(Map<String, Object> extraClaims, String subject, long expiration) {
+        // 외부 변경 가능 객체 문제 해결을 위해 Map을 복사
+        Map<String, Object> immutableClaims = new HashMap<>(extraClaims);
+        
         return Jwts.builder()
-                .setClaims(extraClaims)
+                .setClaims(immutableClaims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))

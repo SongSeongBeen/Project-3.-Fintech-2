@@ -20,6 +20,18 @@
     <Match>
         <Class name="~.*Test.*"/>
     </Match>
+    
+    <!-- JPA Entity 관련 false positive 제외 -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP"/>
+        <Class name="~.*entity.*"/>
+    </Match>
+    
+    <!-- DTO 관련 false positive 제외 -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP"/>
+        <Class name="~.*dto.*"/>
+    </Match>
 
     <!-- 개발 환경 설정 제외 -->
     <Match>

@@ -13,10 +13,6 @@
         <priority>3</priority>
     </rule>
     
-    <rule ref="category/java/codestyle.xml">
-        <priority>4</priority>
-    </rule>
-    
     <rule ref="category/java/design.xml">
         <priority>3</priority>
     </rule>
@@ -41,13 +37,12 @@
         <priority>1</priority>
     </rule>
 
-    <!-- 제외할 규칙들 -->
-    <rule ref="category/java/codestyle.xml/AtLeastOneConstructor">
-        <priority>5</priority>
-    </rule>
-    
-    <rule ref="category/java/codestyle.xml/OnlyOneReturn">
-        <priority>5</priority>
+    <!-- 코드 스타일 규칙 (중복 제거) -->
+    <rule ref="category/java/codestyle.xml">
+        <priority>4</priority>
+        <!-- AtLeastOneConstructor와 OnlyOneReturn은 제외 -->
+        <exclude name="AtLeastOneConstructor"/>
+        <exclude name="OnlyOneReturn"/>
     </rule>
 
 </ruleset> 
