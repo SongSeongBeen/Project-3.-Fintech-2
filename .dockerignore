@@ -13,8 +13,6 @@
 # Build
 build/
 .gradle/
-gradlew
-gradlew.bat
 
 # Logs
 *.log
