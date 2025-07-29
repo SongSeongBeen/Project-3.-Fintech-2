@@ -8,7 +8,6 @@ on:
 
 env:
   JAVA_VERSION: '21'
-  GRADLE_VERSION: '8.5'
 
 jobs:
   # 테스트 및 빌드
@@ -24,13 +23,21 @@ jobs:
       with:
         java-version: ${{ env.JAVA_VERSION }}
         distribution: 'temurin'
+        cache: 'gradle'
         
-    - name: Setup Gradle
-      uses: gradle/gradle-build-action@v2
+    - name: Cache Gradle packages
+      uses: actions/cache@v3
       with:
-        gradle-version: ${{ env.GRADLE_VERSION }}
-        arguments: test
-        
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
+    - name: Run tests
+      run: ./gradlew test
+      
     - name: Build application
       run: ./gradlew build -x test
       
@@ -61,13 +68,24 @@ jobs:
       with:
         java-version: ${{ env.JAVA_VERSION }}
         distribution: 'temurin'
+        cache: 'gradle'
         
-    - name: Setup Gradle
-      uses: gradle/gradle-build-action@v2
+    - name: Cache Gradle packages
+      uses: actions/cache@v3
       with:
-        gradle-version: ${{ env.GRADLE_VERSION }}
-        arguments: spotbugsMain pmdMain
-        
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
+    - name: Run SpotBugs
+      run: ./gradlew spotbugsMain
+      
+    - name: Run PMD
+      run: ./gradlew pmdMain
+      
     - name: Upload SpotBugs results
       uses: actions/upload-artifact@v4
       if: always()
@@ -97,13 +115,21 @@ jobs:
       with:
         java-version: ${{ env.JAVA_VERSION }}
         distribution: 'temurin'
+        cache: 'gradle'
         
-    - name: Setup Gradle
-      uses: gradle/gradle-build-action@v2
+    - name: Cache Gradle packages
+      uses: actions/cache@v3
       with:
-        gradle-version: ${{ env.GRADLE_VERSION }}
-        arguments: dependencyCheckAnalyze
-        
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
+    - name: Run OWASP dependency check
+      run: ./gradlew dependencyCheckAnalyze
+      
     - name: Upload security results
       uses: actions/upload-artifact@v4
       if: always()
