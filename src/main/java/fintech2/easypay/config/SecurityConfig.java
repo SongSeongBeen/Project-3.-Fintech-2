@@ -86,9 +86,17 @@ public class SecurityConfig {
         
         // 외부 변경 가능 객체 문제 해결을 위해 불변 객체로 복사
         CorsConfiguration immutableConfiguration = new CorsConfiguration();
-        immutableConfiguration.setAllowedOriginPatterns(new ArrayList<>(configuration.getAllowedOriginPatterns()));
-        immutableConfiguration.setAllowedMethods(new ArrayList<>(configuration.getAllowedMethods()));
-        immutableConfiguration.setAllowedHeaders(new ArrayList<>(configuration.getAllowedHeaders()));
+        
+        // null 체크 추가하여 null pointer dereference 방지
+        if (configuration.getAllowedOriginPatterns() != null) {
+            immutableConfiguration.setAllowedOriginPatterns(new ArrayList<>(configuration.getAllowedOriginPatterns()));
+        }
+        if (configuration.getAllowedMethods() != null) {
+            immutableConfiguration.setAllowedMethods(new ArrayList<>(configuration.getAllowedMethods()));
+        }
+        if (configuration.getAllowedHeaders() != null) {
+            immutableConfiguration.setAllowedHeaders(new ArrayList<>(configuration.getAllowedHeaders()));
+        }
         immutableConfiguration.setAllowCredentials(configuration.getAllowCredentials());
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

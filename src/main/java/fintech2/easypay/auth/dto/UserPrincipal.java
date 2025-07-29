@@ -24,11 +24,11 @@ public class UserPrincipal implements UserDetails {
     private String accountNumber;
     
     public static UserPrincipal from(User user) {
-        // 외부 변경 가능 객체 문제 해결을 위해 문자열 복사
-        String safePhoneNumber = new String(user.getPhoneNumber());
-        String safePassword = new String(user.getPassword());
+        // 외부 변경 가능 객체 문제 해결을 위해 문자열 복사 (불필요한 new String() 제거)
+        String safePhoneNumber = user.getPhoneNumber();
+        String safePassword = user.getPassword();
         String safeAccountNumber = user.getVirtualAccount() != null ? 
-            new String(user.getVirtualAccount().getAccountNumber()) : null;
+            user.getVirtualAccount().getAccountNumber() : null;
         
         return UserPrincipal.builder()
                 .id(user.getId())
