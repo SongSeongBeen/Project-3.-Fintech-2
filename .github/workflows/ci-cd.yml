@@ -1,4 +1,4 @@
-name: EasyPay Development CI/CD
+name: EasyPay PR Checks
 
 on:
   push:
@@ -10,7 +10,7 @@ env:
   JAVA_VERSION: '21'
 
 jobs:
-  # 테스트 및 빌드
+  # 테스트 및 빌드 (PR용)
   test-and-build:
     runs-on: ubuntu-latest
     
@@ -41,12 +41,6 @@ jobs:
     - name: Build application
       run: ./gradlew build -x test
       
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: easypay-build
-        path: build/libs/*.jar
-        
     - name: Upload test results
       uses: actions/upload-artifact@v4
       if: always()
@@ -55,7 +49,7 @@ jobs:
         path: build/test-results/
         retention-days: 30
 
-  # 코드 품질 검사
+  # 코드 품질 검사 (PR용)
   code-quality:
     runs-on: ubuntu-latest
     
@@ -102,7 +96,7 @@ jobs:
         path: build/reports/pmd/
         retention-days: 30
 
-  # 보안 검사
+  # 보안 검사 (PR용)
   security-scan:
     runs-on: ubuntu-latest
     
@@ -138,45 +132,17 @@ jobs:
         path: build/reports/dependency-check/
         retention-days: 30
 
-  # Docker 이미지 빌드 및 푸시
-  docker-build:
+  # PR 요약 알림
+  pr-summary:
     runs-on: ubuntu-latest
-    needs: [test-and-build]
+    needs: [test-and-build, code-quality, security-scan]
+    if: github.event_name == 'pull_request'
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-      
-    - name: Login to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-        
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        push: true
-        tags: |
-          ${{ secrets.DOCKER_USERNAME }}/easypay:latest
-          ${{ secrets.DOCKER_USERNAME }}/easypay:${{ github.sha }}
-          ${{ secrets.DOCKER_USERNAME }}/easypay:dev
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
-  # 개발 환경 배포 알림
-  notify-deployment:
-    runs-on: ubuntu-latest
-    needs: [test-and-build, docker-build]
-    
-    steps:
-    - name: Notify deployment
+    - name: PR Summary
       run: |
-        echo "✅ EasyPay Development Build Completed!"
-        echo "📦 Docker Image: ${{ secrets.DOCKER_USERNAME }}/easypay:latest"
-        echo "🔗 GitHub Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-        echo "📊 Test Results: Available in artifacts" 
+        echo "✅ EasyPay PR Checks Completed!"
+        echo "📊 Test Results: Available in artifacts"
+        echo "🔍 Code Quality: SpotBugs & PMD results uploaded"
+        echo "🔒 Security Scan: OWASP dependency check completed"
+        echo "📝 Ready for code review!" 
