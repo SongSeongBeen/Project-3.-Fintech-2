@@ -1,6 +1,7 @@
 package fintech2.easypay.auth.service;
 
 import fintech2.easypay.account.repository.AccountBalanceRepository;
+import fintech2.easypay.account.repository.AccountRepository;
 import fintech2.easypay.auth.entity.User;
 import fintech2.easypay.auth.repository.UserRepository;
 import fintech2.easypay.auth.service.JwtService;
@@ -28,6 +29,7 @@ import static org.mockito.Mockito.when;
 class AuthServiceIntegrationTest {
 
     @Mock private UserRepository userRepository;
+    @Mock private AccountRepository accountRepository;
     @Mock private AccountBalanceRepository accountBalanceRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private JwtService jwtService;
@@ -48,6 +50,7 @@ class AuthServiceIntegrationTest {
         // Given: AuthService 생성자 주입으로 초기화
         authService = new AuthService(
             userRepository,
+            accountRepository,
             accountBalanceRepository,
             passwordEncoder,
             jwtService,

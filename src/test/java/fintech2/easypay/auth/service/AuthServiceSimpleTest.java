@@ -5,6 +5,7 @@ import fintech2.easypay.auth.dto.RegisterRequest;
 import fintech2.easypay.auth.entity.User;
 import fintech2.easypay.auth.repository.UserRepository;
 import fintech2.easypay.account.entity.AccountBalance;
+import fintech2.easypay.account.repository.AccountRepository;
 import fintech2.easypay.account.repository.AccountBalanceRepository;
 import fintech2.easypay.audit.service.AuditLogService;
 import fintech2.easypay.audit.service.AlarmService;
@@ -34,6 +35,9 @@ class AuthServiceSimpleTest {
     private UserRepository userRepository;
     
     @Mock
+    private AccountRepository accountRepository;
+    
+    @Mock
     private AccountBalanceRepository accountBalanceRepository;
     
     @Mock
@@ -57,6 +61,7 @@ class AuthServiceSimpleTest {
     void setUp() {
         authService = new AuthService(
             userRepository,
+            accountRepository,
             accountBalanceRepository,
             passwordEncoder,
             jwtService,
