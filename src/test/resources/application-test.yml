@@ -1,0 +1,40 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  
+  # Redis 자동 설정 비활성화 (테스트 환경)
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+  
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false  # 테스트에서는 SQL 로그 비활성화
+    properties:
+      hibernate:
+        format_sql: false
+  
+  h2:
+    console:
+      enabled: false  # 테스트에서는 H2 콘솔 비활성화
+
+server:
+  port: 0  # 랜덤 포트 사용 (테스트 충돌 방지)
+
+jwt:
+  secret: testSecretKey123456789012345678901234567890123456789012345678901234567890
+  expiration:
+    access: 3600000
+    refresh: 2592000000
+
+logging:
+  level:
+    org.springframework.security: WARN  # 테스트에서는 보안 로그 줄임
+    fintech2.easypay: INFO
+    org.hibernate.SQL: WARN  # SQL 로그 최소화

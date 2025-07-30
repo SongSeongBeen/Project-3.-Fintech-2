@@ -1,6 +1,6 @@
 package fintech2.easypay.payment.service;
 
-import fintech2.easypay.audit.entity.AuditEventType;
+import fintech2.easypay.common.enums.AuditEventType;
 
 /**
  * 결제 모듈 전용 감사 로그 서비스 인터페이스

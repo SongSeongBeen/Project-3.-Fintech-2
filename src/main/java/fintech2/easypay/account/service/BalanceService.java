@@ -11,6 +11,8 @@ import fintech2.easypay.common.exception.AccountNotFoundException;
 import fintech2.easypay.common.exception.InsufficientBalanceException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,28 +34,37 @@ public class BalanceService {
     private final AlarmService alarmService;
 
     /**
-     * 계좌 잔액 조회
+     * 계좌 잔액 조회 (캐시 적용)
      */
+    @Cacheable(value = "balanceCache", key = "#accountNumber")
     public BigDecimal getBalance(String accountNumber) {
         AccountBalance balance = accountBalanceRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new AccountNotFoundException("계좌를 찾을 수 없습니다: " + accountNumber));
+                .orElseGet(() -> {
+                    // 계좌가 없으면 0원으로 자동 생성
+                    AccountBalance newBalance = new AccountBalance();
+                    newBalance.setAccountNumber(accountNumber);
+                    newBalance.setBalance(BigDecimal.ZERO);
+                    return accountBalanceRepository.save(newBalance);
+                });
         
         return balance.getBalance();
     }
 
     /**
-     * 잔액 증가 (입금)
+     * 잔액 증가 (입금) - 캐시 무효화
      */
     @Transactional
+    @CacheEvict(value = "balanceCache", key = "#accountNumber")
     public BalanceChangeResult increase(String accountNumber, BigDecimal amount, TransactionType transactionType, 
                                      String description, String referenceId, String userId) {
         return changeBalance(accountNumber, amount, transactionType, description, referenceId, userId, true);
     }
 
     /**
-     * 잔액 감소 (출금)
+     * 잔액 감소 (출금) - 캐시 무효화
      */
     @Transactional
+    @CacheEvict(value = "balanceCache", key = "#accountNumber")
     public BalanceChangeResult decrease(String accountNumber, BigDecimal amount, TransactionType transactionType, 
                                      String description, String referenceId, String userId) {
         return changeBalance(accountNumber, amount.negate(), transactionType, description, referenceId, userId, false);

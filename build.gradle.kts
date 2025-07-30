@@ -8,6 +8,7 @@ plugins {
 	id("org.owasp.dependencycheck") version "12.1.0"
 	id("com.github.spotbugs") version "6.0.4"
 	id("pmd")
+	id("io.gatling.gradle") version "3.10.5"
 }
 
 group = "fintech2"
@@ -35,8 +36,10 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
-	implementation("org.springframework.boot:spring-boot-starter-data-redis")
+	// Redis는 개발 환경에서 제외 (운영 환경에서만 사용)
+	// implementation("org.springframework.boot:spring-boot-starter-data-redis")
 	implementation("org.springframework.boot:spring-boot-starter-cache")
+	implementation("com.github.ben-manes.caffeine:caffeine")
 	implementation("org.flywaydb:flyway-core")
 
 	// JWT
@@ -63,11 +66,17 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	
+	// Gatling 성능 테스트
+	gatlingImplementation("io.gatling.highcharts:gatling-charts-highcharts:3.10.5")
+	gatlingImplementation("io.gatling:gatling-http-java:3.10.5")
 }
 
 tasks.withType<Test> {
 	useJUnitPlatform()
 }
+
+// Gatling 설정 - 기본 설정 사용
 
 // SpotBugs 플러그인 전체 설정 (Extension)
 spotbugs {
@@ -99,7 +108,7 @@ tasks.withType<org.gradle.api.plugins.quality.Pmd> {
 // OWASP Dependency Check 설정
 dependencyCheck {
 	formats = listOf("HTML", "JSON")
-	outputDirectory = "$buildDir/reports/dependency-check"
+	outputDirectory = "${layout.buildDirectory.get()}/reports/dependency-check"
 	scanSet = listOf(file("$projectDir"))
 	suppressionFile = "$projectDir/config/dependency-check/suppressions.xml"
 }

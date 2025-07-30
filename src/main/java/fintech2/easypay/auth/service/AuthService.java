@@ -4,8 +4,11 @@ import fintech2.easypay.auth.dto.LoginRequest;
 import fintech2.easypay.auth.dto.RegisterRequest;
 import fintech2.easypay.auth.entity.User;
 import fintech2.easypay.auth.repository.UserRepository;
+import fintech2.easypay.account.entity.Account;
 import fintech2.easypay.account.entity.AccountBalance;
+import fintech2.easypay.account.repository.AccountRepository;
 import fintech2.easypay.account.repository.AccountBalanceRepository;
+import fintech2.easypay.common.enums.AccountStatus;
 import fintech2.easypay.audit.service.AuditLogService;
 import fintech2.easypay.audit.service.AlarmService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +30,7 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class AuthService {
     private final UserRepository userRepository;
+    private final AccountRepository accountRepository;
     private final AccountBalanceRepository accountBalanceRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -69,19 +73,27 @@ public class AuthService {
             user.setPassword(encoded);
             user.setName(req.getName());
             user.setAccountNumber(accountNumber);
-            userRepository.save(user);
-            // 7. AccountBalance 생성
+            User savedUser = userRepository.save(user);
+            // 7. Account 생성 (PaymentService 호환성을 위해)
+            Account account = Account.builder()
+                    .accountNumber(accountNumber)
+                    .userId(savedUser.getId())
+                    .balance(BigDecimal.ZERO)
+                    .status(AccountStatus.ACTIVE)
+                    .build();
+            accountRepository.save(account);
+            // 8. AccountBalance 생성 (기존 호환성을 위해)
             AccountBalance accountBalance = AccountBalance.builder()
                     .accountNumber(accountNumber)
                     .balance(BigDecimal.ZERO)
                     .build();
             accountBalanceRepository.save(accountBalance);
-            // 8. JWT 발급
+            // 9. JWT 발급
             String jwt = jwtService.generateAccessToken(user.getPhoneNumber());
-            // 9. 감사로그 기록
+            // 10. 감사로그 기록
             auditLogService.logSuccess(user.getId(), "USER_REGISTER", "USER", user.getId().toString(), 
                     null, "회원가입 완료 - 계좌번호: " + accountNumber);
-            // 10. 응답
+            // 11. 응답
             Map<String, Object> resp = new HashMap<>();
             resp.put("message", "회원가입이 완료되었습니다");
             resp.put("accessToken", jwt);

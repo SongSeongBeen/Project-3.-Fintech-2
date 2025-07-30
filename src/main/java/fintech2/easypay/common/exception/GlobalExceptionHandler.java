@@ -1,6 +1,8 @@
 package fintech2.easypay.common.exception;
 
 import fintech2.easypay.audit.service.AlarmService;
+import fintech2.easypay.common.BusinessException;
+import fintech2.easypay.payment.exception.PaymentException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -109,6 +111,46 @@ public class GlobalExceptionHandler {
         response.put("message", e.getMessage());
         
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    // 결제 예외
+    @ExceptionHandler(PaymentException.class)
+    public ResponseEntity<Map<String, Object>> handlePaymentException(PaymentException e) {
+        log.warn("Payment Exception: {} - {}", e.getErrorCode(), e.getMessage());
+        
+        // 결제 실패 알람 발송
+        alarmService.sendSystemAlert("PAYMENT", "결제 실패: " + e.getErrorCode() + " - " + e.getMessage(), e);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("error", e.getErrorCode().name());
+        response.put("message", e.getMessage());
+        
+        // 오류 코드에 따른 HTTP 상태 코드 결정
+        HttpStatus status = switch (e.getErrorCode()) {
+            case MEMBER_NOT_FOUND, ACCOUNT_NOT_FOUND, PAYMENT_NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case INSUFFICIENT_BALANCE -> HttpStatus.PAYMENT_REQUIRED;
+            case INVALID_PAYMENT_AMOUNT, INVALID_MERCHANT_INFO, INVALID_REFUND_AMOUNT -> HttpStatus.BAD_REQUEST;
+            case PG_API_ERROR -> HttpStatus.BAD_GATEWAY;
+            case PAYMENT_TIMEOUT -> HttpStatus.REQUEST_TIMEOUT;
+            default -> HttpStatus.INTERNAL_SERVER_ERROR;
+        };
+        
+        return ResponseEntity.status(status).body(response);
+    }
+
+    // 송금 예외
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<Map<String, Object>> handleBusinessException(BusinessException e) {
+        log.warn("Business Exception: {}", e.getMessage());
+        
+        // 비즈니스 로직 실패 알람 발송
+        alarmService.sendSystemAlert("BUSINESS", "비즈니스 로직 실패: " + e.getMessage(), e);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("error", "BUSINESS_ERROR");
+        response.put("message", e.getMessage());
+        
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     // 일반적인 예외

@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import fintech2.easypay.account.entity.Account;
 import fintech2.easypay.account.repository.AccountRepository;
-import fintech2.easypay.audit.entity.AuditEventType;
+import fintech2.easypay.common.enums.AuditEventType;
 import fintech2.easypay.audit.service.AuditLogService;
 import fintech2.easypay.audit.service.NotificationService;
 import fintech2.easypay.transfer.entity.Transfer;

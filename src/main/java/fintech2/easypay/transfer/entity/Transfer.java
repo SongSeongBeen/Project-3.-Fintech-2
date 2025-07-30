@@ -1,7 +1,7 @@
 package fintech2.easypay.transfer.entity;
 
 import fintech2.easypay.common.BaseEntity;
-import fintech2.easypay.member.entity.Member;
+import fintech2.easypay.auth.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,15 +30,15 @@ public class Transfer extends BaseEntity {
     private String bankTransactionId; // 외부 은행 시스템의 거래 ID
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_id", nullable = false)
-    private Member sender;
+    @JoinColumn(name = "sender_user_id", nullable = false) // sender_id -> sender_user_id
+    private User sender; // Member -> User
     
     @Column(name = "sender_account_number", nullable = false)
     private String senderAccountNumber;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "receiver_id", nullable = false)
-    private Member receiver;
+    @JoinColumn(name = "receiver_user_id", nullable = false)
+    private User receiver; // Member -> User
     
     @Column(name = "receiver_account_number", nullable = false)
     private String receiverAccountNumber;

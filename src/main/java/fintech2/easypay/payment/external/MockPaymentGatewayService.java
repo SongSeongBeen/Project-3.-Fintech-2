@@ -42,20 +42,20 @@ public class MockPaymentGatewayService implements PaymentGatewayService {
         PgApiResponse response;
         double randomValue = random.nextDouble();
         
-        if (randomValue < 0.80) {
-            // 80% 성공 케이스
+        if (randomValue < 0.95) {
+            // 95% 성공 케이스 (성능 테스트를 위해 성공률 증대)
             response = createSuccessResponse(request);
-        } else if (randomValue < 0.85) {
-            // 5% 잔액 부족
+        } else if (randomValue < 0.97) {
+            // 2% 잔액 부족
             response = createFailureResponse(request, PgApiStatus.INSUFFICIENT_BALANCE, "E201", "카드 한도가 부족합니다.");
-        } else if (randomValue < 0.90) {
-            // 5% 한도 초과
+        } else if (randomValue < 0.99) {
+            // 2% 한도 초과
             response = createFailureResponse(request, PgApiStatus.LIMIT_EXCEEDED, "E202", "일일 결제 한도를 초과했습니다.");
-        } else if (randomValue < 0.95) {
-            // 5% 사기 의심
+        } else if (randomValue < 0.998) {
+            // 0.3% 사기 의심
             response = createFailureResponse(request, PgApiStatus.SUSPECTED_FRAUD, "E301", "사기 의심 거래로 차단되었습니다.");
         } else {
-            // 5% 시스템 오류
+            // 0.2% 시스템 오류
             response = createFailureResponse(request, PgApiStatus.SYSTEM_ERROR, "E999", "PG사 시스템 오류가 발생했습니다.");
         }
         

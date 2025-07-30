@@ -1,8 +1,8 @@
 package fintech2.easypay.payment.service.impl;
 
-import fintech2.easypay.audit.entity.AuditEventType;
+import fintech2.easypay.common.enums.AuditEventType;
 import fintech2.easypay.audit.entity.AuditLog;
-import fintech2.easypay.audit.entity.AuditStatus;
+import fintech2.easypay.common.enums.AuditResult;
 import fintech2.easypay.audit.repository.AuditLogRepository;
 import fintech2.easypay.payment.service.PaymentAuditService;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ public class PaymentAuditServiceImpl implements PaymentAuditService {
                                  String requestData, String responseData) {
         AuditLog auditLog = AuditLog.builder()
                 .eventType(AuditEventType.PAYMENT_SUCCESS)
-                .status(AuditStatus.SUCCESS)
+                .status(AuditResult.SUCCESS)
                 .memberId(memberId)
                 .phoneNumber(phoneNumber)
                 .eventDescription(eventDescription)
@@ -41,7 +41,7 @@ public class PaymentAuditServiceImpl implements PaymentAuditService {
                                  String requestData, String errorMessage) {
         AuditLog auditLog = AuditLog.builder()
                 .eventType(AuditEventType.PAYMENT_FAILED)
-                .status(AuditStatus.FAILED)
+                .status(AuditResult.FAILURE)
                 .memberId(memberId)
                 .phoneNumber(phoneNumber)
                 .eventDescription(eventDescription)
@@ -57,7 +57,7 @@ public class PaymentAuditServiceImpl implements PaymentAuditService {
                                 String requestData, String responseData) {
         AuditLog auditLog = AuditLog.builder()
                 .eventType(AuditEventType.PAYMENT_CANCEL)
-                .status(AuditStatus.SUCCESS)
+                .status(AuditResult.SUCCESS)
                 .memberId(memberId)
                 .phoneNumber(phoneNumber)
                 .eventDescription(eventDescription)
@@ -73,7 +73,7 @@ public class PaymentAuditServiceImpl implements PaymentAuditService {
                                 String requestData, String responseData) {
         AuditLog auditLog = AuditLog.builder()
                 .eventType(AuditEventType.PAYMENT_REFUND)
-                .status(AuditStatus.SUCCESS)
+                .status(AuditResult.SUCCESS)
                 .memberId(memberId)
                 .phoneNumber(phoneNumber)
                 .eventDescription(eventDescription)
