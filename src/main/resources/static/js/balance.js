@@ -167,9 +167,11 @@ function displayTransactions(transactions) {
     }
 
     const html = transactions.map(transaction => {
-        const isPositive = transaction.amount > 0;
-        const amountClass = isPositive ? 'positive' : 'negative';
-        const sign = isPositive ? '+' : '';
+        // transactionType을 기준으로 출금/입금 판단
+        const isWithdrawal = transaction.transactionType === 'WITHDRAWAL';
+        const amountClass = isWithdrawal ? 'negative' : 'positive';
+        const sign = isWithdrawal ? '-' : '+';
+        const amount = Math.abs(transaction.amount); // 절댓값 사용
         
         return `
             <div class="transaction-item">
@@ -180,7 +182,7 @@ function displayTransactions(transactions) {
                     </div>
                 </div>
                 <div class="transaction-amount ${amountClass}">
-                    ${sign}${Number(transaction.amount).toLocaleString()}원
+                    ${sign}${amount.toLocaleString()}원
                 </div>
             </div>
         `;

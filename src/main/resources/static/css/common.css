@@ -352,6 +352,7 @@ body {
 
 .transaction-amount {
     font-weight: 600;
+    font-size: 16px;
 }
 
 .transaction-amount.positive {
@@ -360,6 +361,7 @@ body {
 
 .transaction-amount.negative {
     color: #dc3545;
+    font-weight: 700;
 }
 
 .no-data {

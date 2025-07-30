@@ -2,6 +2,7 @@ package fintech2.easypay.auth.service;
 
 import fintech2.easypay.auth.entity.User;
 import fintech2.easypay.auth.repository.UserRepository;
+import fintech2.easypay.account.repository.AccountRepository;
 import fintech2.easypay.account.repository.AccountBalanceRepository;
 import fintech2.easypay.audit.service.AuditLogService;
 import fintech2.easypay.audit.service.AlarmService;
@@ -27,6 +28,9 @@ class AuthServiceSpringTest {
     private UserRepository userRepository;
     
     @Mock
+    private AccountRepository accountRepository;
+    
+    @Mock
     private AccountBalanceRepository accountBalanceRepository;
     
     @Mock
@@ -50,6 +54,7 @@ class AuthServiceSpringTest {
     void setUp() {
         authService = new AuthService(
             userRepository,
+            accountRepository,
             accountBalanceRepository,
             passwordEncoder,
             jwtService,
