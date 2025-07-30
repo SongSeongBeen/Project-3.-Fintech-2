@@ -2,7 +2,7 @@ package fintech2.easypay.payment.service.impl;
 
 import fintech2.easypay.account.entity.Account;
 import fintech2.easypay.account.repository.AccountRepository;
-import fintech2.easypay.payment.service.AccountService;
+import fintech2.easypay.payment.service.PaymentAccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,13 +17,13 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class AccountServiceImpl implements AccountService {
+public class AccountServiceImpl implements PaymentAccountService {
     
     private final AccountRepository accountRepository;
     
     @Override
-    public Optional<Account> findByMemberId(Long memberId) {
-        return accountRepository.findByMemberId(memberId);
+    public Optional<Account> findByUserId(Long userId) {
+        return accountRepository.findByUserId(userId);
     }
     
     @Override
@@ -34,14 +34,14 @@ public class AccountServiceImpl implements AccountService {
     @Override
     @Transactional
     public void withdraw(Account account, BigDecimal amount) {
-        account.withdraw(amount);
+        account.withdraw(amount); // Account 엔티티의 withdraw 메소드 사용
         accountRepository.save(account);
     }
     
     @Override
     @Transactional
     public void deposit(Account account, BigDecimal amount) {
-        account.deposit(amount);
+        account.deposit(amount); // Account 엔티티의 deposit 메소드 사용
         accountRepository.save(account);
     }
     

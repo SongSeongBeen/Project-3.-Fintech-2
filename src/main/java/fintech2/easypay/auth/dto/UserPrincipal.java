@@ -27,8 +27,7 @@ public class UserPrincipal implements UserDetails {
         // 외부 변경 가능 객체 문제 해결을 위해 문자열 복사 (불필요한 new String() 제거)
         String safePhoneNumber = user.getPhoneNumber();
         String safePassword = user.getPassword();
-        String safeAccountNumber = user.getVirtualAccount() != null ? 
-            user.getVirtualAccount().getAccountNumber() : null;
+        String safeAccountNumber = user.getAccountNumber();
         
         return UserPrincipal.builder()
                 .id(user.getId())

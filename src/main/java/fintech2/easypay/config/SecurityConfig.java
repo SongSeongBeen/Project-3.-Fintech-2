@@ -38,6 +38,8 @@ public class SecurityConfig {
                 // 인증 불필요 (Public)
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
+                .requestMatchers("/actuator/health").permitAll() // 헬스체크 엔드포인트 추가
+                .requestMatchers("/accounts/test-balance/**").permitAll() // 테스트 엔드포인트
                 // 정적 리소스 허용
                 .requestMatchers("/static/**").permitAll()
                 .requestMatchers("/js/**").permitAll()
@@ -46,8 +48,12 @@ public class SecurityConfig {
                 .requestMatchers("/", "/index.html", "/register.html", "/main.html", "/balance.html", "/alarm.html").permitAll()
                 // 계좌 관련 API (JWT 인증 필요)
                 .requestMatchers("/accounts/**").authenticated()
+                // 결제 관련 API (JWT 인증 필요)
+                .requestMatchers("/payments/**").authenticated()
+                // 송금 관련 API (JWT 인증 필요)
+                .requestMatchers("/transfers/**").authenticated()
                 // 알림 관련 API (JWT 인증 필요)
-                .requestMatchers("/api/alarms/**").authenticated()
+                .requestMatchers("/alarms/**").authenticated()
                 // 나머지 모든 요청은 인증 필요
                 .anyRequest().authenticated()
             )

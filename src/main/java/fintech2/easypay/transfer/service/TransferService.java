@@ -11,13 +11,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import fintech2.easypay.account.entity.Account;
 import fintech2.easypay.account.repository.AccountRepository;
-import fintech2.easypay.audit.entity.AuditEventType;
+import fintech2.easypay.common.enums.AuditEventType;
 import fintech2.easypay.audit.service.AuditLogService;
 import fintech2.easypay.audit.service.NotificationService;
 import fintech2.easypay.common.BusinessException;
 import fintech2.easypay.common.ErrorCode;
-import fintech2.easypay.member.entity.Member;
-import fintech2.easypay.member.repository.MemberRepository;
+import fintech2.easypay.auth.entity.User;
+import fintech2.easypay.auth.repository.UserRepository;
 import fintech2.easypay.transfer.dto.TransferRequest;
 import fintech2.easypay.transfer.dto.TransferResponse;
 import fintech2.easypay.transfer.entity.Transfer;
@@ -41,7 +41,7 @@ public class TransferService {
     
     private final TransferRepository transferRepository;
     private final AccountRepository accountRepository;
-    private final MemberRepository memberRepository;
+    private final UserRepository userRepository;
     private final AuditLogService auditLogService;
     private final NotificationService notificationService;
     private final BankingApiService bankingApiService;
@@ -58,7 +58,7 @@ public class TransferService {
     @Transactional
     public TransferResponse transfer(String senderPhoneNumber, TransferRequest request) {
         // 송금자 조회
-        Member sender = memberRepository.findByPhoneNumber(senderPhoneNumber)
+        User sender = userRepository.findByPhoneNumber(senderPhoneNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
         
         // 수신자 계좌 조회
@@ -66,7 +66,9 @@ public class TransferService {
             .findByAccountNumber(request.getReceiverAccountNumber())
             .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_ACCOUNT_NUMBER));
         
-        Member receiver = receiverAccount.getMember();
+        // Account엔티티에서 User를 직접 참조할 수 없으므로 userId로 조회
+        User receiver = userRepository.findById(receiverAccount.getUserId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
         
         // 자기 자신에게 송금 방지
         if (sender.getId().equals(receiver.getId())) {
@@ -74,7 +76,7 @@ public class TransferService {
         }
         
         // 송금자 계좌 조회 (락 없이 먼저 조회)
-        Account senderAccount = accountRepository.findByMemberId(sender.getId())
+        Account senderAccount = accountRepository.findByUserId(sender.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
         
         // 데드락 방지를 위한 순서대로 락 획득
@@ -243,18 +245,18 @@ public class TransferService {
     }
     
     public Page<TransferResponse> getSentTransfers(String phoneNumber, Pageable pageable) {
-        Member member = memberRepository.findByPhoneNumber(phoneNumber)
+        User user = userRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
         
-        Page<Transfer> transfers = transferRepository.findBySenderIdOrderByCreatedAtDesc(member.getId(), pageable);
+        Page<Transfer> transfers = transferRepository.findBySenderIdOrderByCreatedAtDesc(user.getId(), pageable);
         return transfers.map(TransferResponse::from);
     }
     
     public Page<TransferResponse> getReceivedTransfers(String phoneNumber, Pageable pageable) {
-        Member member = memberRepository.findByPhoneNumber(phoneNumber)
+        User user = userRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new BusinessException(ErrorCode.MEMBER_NOT_FOUND));
         
-        Page<Transfer> transfers = transferRepository.findByReceiverIdOrderByCreatedAtDesc(member.getId(), pageable);
+        Page<Transfer> transfers = transferRepository.findByReceiverIdOrderByCreatedAtDesc(user.getId(), pageable);
         return transfers.map(TransferResponse::from);
     }
     

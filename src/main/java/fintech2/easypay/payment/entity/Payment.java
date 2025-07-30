@@ -1,7 +1,7 @@
 package fintech2.easypay.payment.entity;
 
-import fintech2.easypay.payment.common.PaymentBaseEntity;
-import fintech2.easypay.member.entity.Member;
+import fintech2.easypay.common.BaseEntity;
+import fintech2.easypay.auth.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Payment extends PaymentBaseEntity {
+public class Payment extends BaseEntity {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,8 +27,8 @@ public class Payment extends PaymentBaseEntity {
     private String paymentId;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false)
-    private Member member;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user; // Member -> User
     
     @Column(name = "account_number", nullable = false)
     private String accountNumber;

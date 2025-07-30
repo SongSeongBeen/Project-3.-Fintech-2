@@ -46,7 +46,7 @@ async function loadNotifications() {
     }
     
     try {
-        const response = await fetch('/api/alarms/count', {
+        const response = await fetch('/alarms/count', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }

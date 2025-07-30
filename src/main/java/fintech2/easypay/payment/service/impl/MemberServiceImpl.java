@@ -1,8 +1,8 @@
 package fintech2.easypay.payment.service.impl;
 
-import fintech2.easypay.member.entity.Member;
-import fintech2.easypay.member.repository.MemberRepository;
-import fintech2.easypay.payment.service.MemberService;
+import fintech2.easypay.auth.entity.User;
+import fintech2.easypay.auth.repository.UserRepository;
+import fintech2.easypay.payment.service.PaymentMemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,17 +16,17 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class MemberServiceImpl implements MemberService {
+public class MemberServiceImpl implements PaymentMemberService {
     
-    private final MemberRepository memberRepository;
+    private final UserRepository userRepository;
     
     @Override
-    public Optional<Member> findByPhoneNumber(String phoneNumber) {
-        return memberRepository.findByPhoneNumber(phoneNumber);
+    public Optional<User> findByPhoneNumber(String phoneNumber) {
+        return userRepository.findByUsername(phoneNumber);
     }
     
     @Override
-    public Optional<Member> findById(Long memberId) {
-        return memberRepository.findById(memberId);
+    public Optional<User> findById(Long userId) {
+        return userRepository.findById(userId);
     }
 }

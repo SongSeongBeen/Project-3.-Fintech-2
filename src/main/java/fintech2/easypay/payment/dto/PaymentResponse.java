@@ -37,7 +37,7 @@ public class PaymentResponse {
         return PaymentResponse.builder()
                 .id(payment.getId())
                 .paymentId(payment.getPaymentId())
-                .phoneNumber(payment.getMember().getPhoneNumber())
+                .phoneNumber(payment.getUser().getPhoneNumber())
                 .accountNumber(payment.getAccountNumber())
                 .merchantId(payment.getMerchantId())
                 .merchantName(payment.getMerchantName())

@@ -6,6 +6,7 @@ import fintech2.easypay.account.repository.AccountBalanceRepository;
 import fintech2.easypay.account.repository.TransactionHistoryRepository;
 import fintech2.easypay.audit.service.AuditLogService;
 import fintech2.easypay.audit.service.AlarmService;
+import fintech2.easypay.auth.dto.UserPrincipal;
 import fintech2.easypay.common.enums.TransactionStatus;
 import fintech2.easypay.common.enums.TransactionType;
 import fintech2.easypay.common.exception.AccountNotFoundException;
@@ -55,6 +56,36 @@ public class AccountService {
         } catch (Exception e) {
             log.error("잔액 조회 중 오류 발생: {}", e.getMessage(), e);
             auditLogService.logError("BALANCE_INQUIRY", "ACCOUNT", accountNumber, "잔액 조회 실패", e);
+            throw new RuntimeException("잔액 조회 중 오류가 발생했습니다", e);
+        }
+    }
+
+    public ResponseEntity<?> getMyBalance(UserPrincipal userPrincipal) {
+        try {
+            String accountNumber = userPrincipal.getAccountNumber();
+            if (accountNumber == null) {
+                throw new AccountNotFoundException("사용자의 계좌번호를 찾을 수 없습니다");
+            }
+
+            // BalanceService를 통해 잔액 조회
+            BigDecimal balance = balanceService.getBalance(accountNumber);
+            
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("accountNumber", accountNumber);
+            resp.put("balance", balance);
+            resp.put("currency", "KRW");
+            resp.put("userId", userPrincipal.getId());
+            resp.put("userName", userPrincipal.getUsername()); // phoneNumber
+
+            auditLogService.logSuccess("MY_BALANCE_INQUIRY", "ACCOUNT", accountNumber, "내 잔액 조회 성공", resp);
+            return ResponseEntity.ok(resp);
+
+        } catch (AccountNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("내 잔액 조회 중 오류 발생: {}", e.getMessage(), e);
+            String accountNumber = userPrincipal != null ? userPrincipal.getAccountNumber() : "UNKNOWN";
+            auditLogService.logError("MY_BALANCE_INQUIRY", "ACCOUNT", accountNumber, "내 잔액 조회 실패", e);
             throw new RuntimeException("잔액 조회 중 오류가 발생했습니다", e);
         }
     }

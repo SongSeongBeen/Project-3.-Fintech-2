@@ -38,6 +38,24 @@ public class AuditLogService {
     }
 
     @Transactional
+    public void logSuccess(Long userId, String phoneNumber, fintech2.easypay.common.enums.AuditEventType eventType, String description, String resourceType, String resourceId, String requestData, String responseData) {
+        AuditLog log = new AuditLog();
+        log.setMemberId(userId);
+        log.setPhoneNumber(phoneNumber);
+        log.setEventType(eventType);
+        log.setEventDescription(description);
+        log.setRequestData(requestData);
+        log.setResponseData(responseData);
+        log.setStatus(AuditResult.SUCCESS);
+        auditLogRepository.save(log);
+        
+        // 중요 비즈니스 이벤트는 알람 전송
+        if (isImportantEvent(eventType.getDescription())) {
+            alarmService.sendBusinessEvent(eventType.getDescription(), userId != null ? userId.toString() : "anonymous", description);
+        }
+    }
+
+    @Transactional
     public void logError(Long userId, String action, String resourceType, String resourceId, String error) {
         AuditLog log = createAuditLog(userId, action, resourceType, resourceId, null, error, AuditResult.ERROR);
         auditLogRepository.save(log);
@@ -67,15 +85,46 @@ public class AuditLogService {
         auditLogRepository.save(log);
     }
 
+    @Transactional
+    public void logFailure(Long userId, String phoneNumber, fintech2.easypay.common.enums.AuditEventType eventType, String description, String resourceType, String resourceId, String requestData, String errorMessage) {
+        AuditLog log = new AuditLog();
+        log.setMemberId(userId);
+        log.setPhoneNumber(phoneNumber);
+        log.setEventType(eventType);
+        log.setEventDescription(description);
+        log.setRequestData(requestData);
+        log.setErrorMessage(errorMessage);
+        log.setStatus(AuditResult.FAIL);
+        auditLogRepository.save(log);
+        
+        // 실패는 항상 알람
+        alarmService.sendSystemAlert(eventType.getDescription(), description, null);
+    }
+
+    @Transactional
+    public void logError(Long userId, String phoneNumber, fintech2.easypay.common.enums.AuditEventType eventType, String description, String resourceType, String resourceId, String requestData, String errorMessage) {
+        AuditLog log = new AuditLog();
+        log.setMemberId(userId);
+        log.setPhoneNumber(phoneNumber);
+        log.setEventType(eventType);
+        log.setEventDescription(description);
+        log.setRequestData(requestData);
+        log.setErrorMessage(errorMessage);
+        log.setStatus(AuditResult.ERROR);
+        auditLogRepository.save(log);
+        
+        // 에러는 항상 알람
+        alarmService.sendSystemAlert(eventType.getDescription(), description, null);
+    }
+
     private AuditLog createAuditLog(Long userId, String action, String resourceType, String resourceId, String oldValue, String newValue, AuditResult result) {
         AuditLog log = new AuditLog();
-        log.setUserId(userId);
-        log.setAction(action);
-        log.setResourceType(resourceType);
-        log.setResourceId(resourceId);
-        log.setOldValue(oldValue);
-        log.setNewValue(newValue);
-        log.setResult(result);
+        log.setMemberId(userId);
+        log.setEventDescription(action);
+        // resourceType은 AuditEventType enum으로 변환 필요하지만 일단 생략
+        log.setRequestData(oldValue);
+        log.setResponseData(newValue);
+        log.setStatus(result);
         return log;
     }
 
