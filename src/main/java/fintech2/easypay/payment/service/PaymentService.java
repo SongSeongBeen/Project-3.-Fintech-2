@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -13,13 +14,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import fintech2.easypay.account.entity.Account;
 import fintech2.easypay.account.repository.AccountRepository;
-import fintech2.easypay.audit.entity.AuditEventType;
+import fintech2.easypay.common.enums.AuditEventType;
 import fintech2.easypay.audit.service.AuditLogService;
 import fintech2.easypay.audit.service.NotificationService;
 import fintech2.easypay.payment.exception.PaymentException;
 import fintech2.easypay.payment.exception.PaymentErrorCode;
-import fintech2.easypay.member.entity.Member;
-import fintech2.easypay.member.repository.MemberRepository;
+import fintech2.easypay.auth.entity.User;
+import fintech2.easypay.auth.repository.UserRepository;
 import fintech2.easypay.payment.dto.PaymentRequest;
 import fintech2.easypay.payment.dto.PaymentResponse;
 import fintech2.easypay.payment.entity.Payment;
@@ -43,7 +44,7 @@ public class PaymentService {
     
     private final PaymentRepository paymentRepository;
     private final AccountRepository accountRepository;
-    private final MemberRepository memberRepository;
+    private final UserRepository userRepository;
     private final AuditLogService auditLogService;
     private final NotificationService notificationService;
     private final PaymentGatewayService paymentGatewayService;
@@ -57,12 +58,12 @@ public class PaymentService {
      */
     @Transactional
     public PaymentResponse processPayment(String phoneNumber, PaymentRequest request) {
-        // 회원 조회
-        Member member = memberRepository.findByPhoneNumber(phoneNumber)
+        // 회원 조회 - phoneNumber로 통일
+        User user = userRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new PaymentException(PaymentErrorCode.MEMBER_NOT_FOUND));
         
         // 계좌 조회 및 검증
-        Account account = accountRepository.findByMemberId(member.getId())
+        Account account = accountRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new PaymentException(PaymentErrorCode.ACCOUNT_NOT_FOUND));
         
         // 결제 방법이 BALANCE인 경우 잔액 확인
@@ -78,7 +79,7 @@ public class PaymentService {
         // 1. 결제 요청을 REQUESTED 상태로 DB 저장
         Payment payment = Payment.builder()
                 .paymentId(paymentId)
-                .member(member)
+                .user(user) // member -> user
                 .accountNumber(account.getAccountNumber())
                 .merchantId(request.getMerchantId())
                 .merchantName(request.getMerchantName())
@@ -96,7 +97,7 @@ public class PaymentService {
             
             // 3. 외부 PG API 호출 (BALANCE가 아닌 경우에만)
             if (request.getPaymentMethod() != PaymentMethod.BALANCE) {
-                PgApiRequest pgRequest = buildPgApiRequest(paymentId, member, request);
+                PgApiRequest pgRequest = buildPgApiRequest(paymentId, user, request);
                 
                 log.info("외부 PG API 호출 시작: {}", paymentId);
                 PgApiResponse pgResponse = paymentGatewayService.processPayment(pgRequest);
@@ -107,7 +108,7 @@ public class PaymentService {
                     
                     // 감사 로그 기록
                     auditLogService.logSuccess(
-                        member.getId(),
+                        user.getId(), // member -> user
                         phoneNumber,
                         AuditEventType.PAYMENT_SUCCESS,
                         String.format("결제 승인: %s (%s원)", request.getMerchantName(), request.getAmount()),
@@ -130,7 +131,7 @@ public class PaymentService {
                 
                 // 감사 로그 기록
                 auditLogService.logSuccess(
-                    member.getId(),
+                    user.getId(),
                     phoneNumber,
                     AuditEventType.PAYMENT_SUCCESS,
                     String.format("잔액 결제 승인: %s (%s원)", request.getMerchantName(), request.getAmount()),
@@ -142,7 +143,7 @@ public class PaymentService {
             
             // 알림 전송
             notificationService.sendPaymentActivityNotification(
-                member.getId(),
+                user.getId(), // member -> user
                 phoneNumber,
                 String.format("%s에서 %s원이 결제되었습니다.", request.getMerchantName(), request.getAmount())
             );
@@ -157,7 +158,7 @@ public class PaymentService {
             
             // 감사 로그 기록
             auditLogService.logFailure(
-                member.getId(),
+                user.getId(),
                 phoneNumber,
                 AuditEventType.PAYMENT_FAILED,
                 "결제 실패: " + e.getMessage(),
@@ -182,11 +183,11 @@ public class PaymentService {
     @Transactional
     public PaymentResponse cancelPayment(String phoneNumber, String paymentId, String reason) {
         // 회원 조회
-        Member member = memberRepository.findByPhoneNumber(phoneNumber)
+        User user = userRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new PaymentException(PaymentErrorCode.MEMBER_NOT_FOUND));
         
         // 결제 정보 조회
-        Payment payment = paymentRepository.findByPaymentIdAndMemberId(paymentId, member.getId())
+        Payment payment = paymentRepository.findByPaymentIdAndUserId(paymentId, user.getId())
                 .orElseThrow(() -> new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
         
         // 취소 가능 여부 확인
@@ -205,7 +206,7 @@ public class PaymentService {
                 }
             } else {
                 // BALANCE 결제인 경우 잔액 복원
-                Account account = accountRepository.findByMemberId(member.getId())
+                Account account = accountRepository.findByUserId(user.getId())
                         .orElseThrow(() -> new PaymentException(PaymentErrorCode.ACCOUNT_NOT_FOUND));
                 account.deposit(payment.getAmount());
             }
@@ -215,7 +216,7 @@ public class PaymentService {
             
             // 감사 로그 기록
             auditLogService.logSuccess(
-                member.getId(),
+                user.getId(), // member -> user
                 phoneNumber,
                 AuditEventType.PAYMENT_CANCEL,
                 String.format("결제 취소: %s (%s원)", payment.getMerchantName(), payment.getAmount()),
@@ -226,7 +227,7 @@ public class PaymentService {
             
             // 알림 전송
             notificationService.sendPaymentActivityNotification(
-                member.getId(),
+                user.getId(), // member -> user
                 phoneNumber,
                 String.format("%s 결제가 취소되었습니다. (%s원)", payment.getMerchantName(), payment.getAmount())
             );
@@ -245,11 +246,11 @@ public class PaymentService {
     @Transactional
     public PaymentResponse refundPayment(String phoneNumber, String paymentId, BigDecimal amount, String reason) {
         // 회원 조회
-        Member member = memberRepository.findByPhoneNumber(phoneNumber)
+        User user = userRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new PaymentException(PaymentErrorCode.MEMBER_NOT_FOUND));
         
         // 결제 정보 조회
-        Payment payment = paymentRepository.findByPaymentIdAndMemberId(paymentId, member.getId())
+        Payment payment = paymentRepository.findByPaymentIdAndUserId(paymentId, user.getId())
                 .orElseThrow(() -> new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
         
         // 환불 가능 여부 확인
@@ -273,7 +274,7 @@ public class PaymentService {
                 }
             } else {
                 // BALANCE 결제인 경우 잔액 복원
-                Account account = accountRepository.findByMemberId(member.getId())
+                Account account = accountRepository.findByUserId(user.getId())
                         .orElseThrow(() -> new PaymentException(PaymentErrorCode.ACCOUNT_NOT_FOUND));
                 account.deposit(amount);
             }
@@ -283,7 +284,7 @@ public class PaymentService {
             
             // 감사 로그 기록
             auditLogService.logSuccess(
-                member.getId(),
+                user.getId(),
                 phoneNumber,
                 AuditEventType.PAYMENT_REFUND,
                 String.format("결제 환불: %s (%s원)", payment.getMerchantName(), amount),
@@ -294,7 +295,7 @@ public class PaymentService {
             
             // 알림 전송
             notificationService.sendPaymentActivityNotification(
-                member.getId(),
+                user.getId(), // member -> user
                 phoneNumber,
                 String.format("%s 결제가 환불되었습니다. (%s원)", payment.getMerchantName(), amount)
             );
@@ -311,21 +312,22 @@ public class PaymentService {
      * 결제 내역 조회
      */
     public Page<PaymentResponse> getPaymentHistory(String phoneNumber, Pageable pageable) {
-        Member member = memberRepository.findByPhoneNumber(phoneNumber)
+        User user = userRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new PaymentException(PaymentErrorCode.MEMBER_NOT_FOUND));
         
-        Page<Payment> payments = paymentRepository.findByMemberIdOrderByCreatedAtDesc(member.getId(), pageable);
+        Page<Payment> payments = paymentRepository.findByUserIdOrderByCreatedAtDesc(user.getId(), pageable);
         return payments.map(PaymentResponse::from);
     }
     
     /**
-     * 결제 상세 조회
+     * 결제 상세 조회 (캐시 적용)
      */
+    @Cacheable(value = "paymentCache", key = "#paymentId")
     public PaymentResponse getPayment(String phoneNumber, String paymentId) {
-        Member member = memberRepository.findByPhoneNumber(phoneNumber)
+        User user = userRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new PaymentException(PaymentErrorCode.MEMBER_NOT_FOUND));
         
-        Payment payment = paymentRepository.findByPaymentIdAndMemberId(paymentId, member.getId())
+        Payment payment = paymentRepository.findByPaymentIdAndUserId(paymentId, user.getId())
                 .orElseThrow(() -> new PaymentException(PaymentErrorCode.PAYMENT_NOT_FOUND));
         
         return PaymentResponse.from(payment);
@@ -346,7 +348,7 @@ public class PaymentService {
     /**
      * PG API 요청 생성
      */
-    private PgApiRequest buildPgApiRequest(String paymentId, Member member, PaymentRequest request) {
+    private PgApiRequest buildPgApiRequest(String paymentId, User user, PaymentRequest request) {
         Map<String, String> cardInfo = null;
         Map<String, String> accountInfo = null;
         
@@ -369,8 +371,8 @@ public class PaymentService {
                 .amount(request.getAmount())
                 .currency("KRW")
                 .paymentMethod(request.getPaymentMethod().name())
-                .customerName(member.getName())
-                .customerPhone(member.getPhoneNumber())
+                .customerName(user.getName())
+                .customerPhone(user.getPhoneNumber())
                 .productName(request.getProductName())
                 .orderNumber(request.getOrderNumber())
                 .cardInfo(cardInfo)

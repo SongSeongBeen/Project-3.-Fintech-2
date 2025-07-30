@@ -96,7 +96,7 @@ async function markAlarmsAsRead() {
     }
     
     try {
-        const response = await fetch('/api/alarms/mark-read', {
+        const response = await fetch('/alarms/mark-read', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -122,7 +122,7 @@ async function loadAlarms() {
     const token = localStorage.getItem('accessToken');
     
     try {
-        const response = await fetch('/api/alarms/list', {
+        const response = await fetch('/alarms/list', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -343,7 +343,7 @@ async function filterAlarms(category, event) {
     const token = localStorage.getItem('accessToken');
     
     try {
-        const response = await fetch(`/api/alarms/list?category=${category}`, {
+        const response = await fetch(`/alarms/list?category=${category}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,

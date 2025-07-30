@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import fintech2.easypay.auth.CustomUserDetails;
+import fintech2.easypay.auth.dto.UserPrincipal;
 import fintech2.easypay.common.ApiResponse;
 import fintech2.easypay.transfer.dto.TransferRequest;
 import fintech2.easypay.transfer.dto.TransferResponse;
@@ -26,7 +26,7 @@ import fintech2.easypay.transfer.service.TransferService;
  * JWT 토큰 기반 인증을 통한 보안 및 사용자 식별
  */
 @RestController
-@RequestMapping("/api/transfers")
+@RequestMapping("/transfers")
 @RequiredArgsConstructor
 @Tag(name = "송금 관리", description = "송금 및 거래 내역 관리 API")
 public class TransferController {
@@ -42,7 +42,7 @@ public class TransferController {
      */
     @PostMapping
     public ApiResponse<TransferResponse> transfer(
-        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @AuthenticationPrincipal UserPrincipal userDetails,
         @Valid @RequestBody TransferRequest request) {
         TransferResponse response = transferService.transfer(userDetails.getUsername(), request);
         return ApiResponse.success("송금이 완료되었습니다.", response);
@@ -63,7 +63,7 @@ public class TransferController {
     
     @GetMapping("/history")
     public ApiResponse<Page<TransferResponse>> getTransferHistory(
-        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @AuthenticationPrincipal UserPrincipal userDetails,
         Pageable pageable) {
         Page<TransferResponse> response = 
             transferService.getTransferHistory(userDetails.getUsername(), pageable);
@@ -73,7 +73,7 @@ public class TransferController {
     @GetMapping("/sent")
     @Operation(summary = "송금 내역 조회", description = "내가 송금한 내역 조회")
     public ApiResponse<Page<TransferResponse>> getSentTransfers(
-        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @AuthenticationPrincipal UserPrincipal userDetails,
         Pageable pageable) {
         Page<TransferResponse> response = 
             transferService.getSentTransfers(userDetails.getUsername(), pageable);
@@ -83,7 +83,7 @@ public class TransferController {
     @GetMapping("/received")
     @Operation(summary = "입금 내역 조회", description = "내가 받은 입금 내역 조회")
     public ApiResponse<Page<TransferResponse>> getReceivedTransfers(
-        @AuthenticationPrincipal CustomUserDetails userDetails,
+        @AuthenticationPrincipal UserPrincipal userDetails,
         Pageable pageable) {
         Page<TransferResponse> response = 
             transferService.getReceivedTransfers(userDetails.getUsername(), pageable);

@@ -1,5 +1,6 @@
 package fintech2.easypay.audit.entity;
 
+import fintech2.easypay.common.enums.AuditEventType;
 import fintech2.easypay.common.enums.AuditResult;
 import jakarta.persistence.*;
 import lombok.*;
@@ -7,27 +8,34 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "audit_logs")
-@Getter @Setter @NoArgsConstructor
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class AuditLog {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long userId;
-    private String action;
-    private String resourceType;
-    private String resourceId;
+    @Enumerated(EnumType.STRING)
+    private AuditEventType eventType; // 이벤트 유형
+    
+    @Enumerated(EnumType.STRING)
+    private AuditResult status; // result -> status
+    
+    private Long memberId; // userId -> memberId (payment/transfer 모듈과 호환)
+    private String phoneNumber; // 휴대폰 번호
+    
+    private String eventDescription;
     
     @Column(columnDefinition = "TEXT")
-    private String oldValue;
+    private String requestData; // oldValue -> requestData
     
     @Column(columnDefinition = "TEXT")
-    private String newValue;
+    private String responseData; // newValue -> responseData
+    
+    @Column(columnDefinition = "TEXT")
+    private String errorMessage; // 오류 메시지
     
     private String ipAddress;
     private String userAgent;
     
-    @Enumerated(EnumType.STRING)
-    private AuditResult result;
-    
+    @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 } 

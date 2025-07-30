@@ -44,8 +44,8 @@ public class MockBankingApiService implements BankingApiService {
             BankingApiResponse response;
             double randomValue = random.nextDouble();
             
-            if (randomValue < 0.80) {
-                // 80% 성공 케이스
+            if (randomValue < 0.95) {
+                // 95% 성공 케이스 (성능 테스트를 위해 성공률 증대)
                 response = BankingApiResponse.builder()
                         .transactionId(request.getTransactionId())
                         .bankTransactionId("BANK-" + UUID.randomUUID().toString())
@@ -53,8 +53,8 @@ public class MockBankingApiService implements BankingApiService {
                         .message("송금이 정상적으로 처리되었습니다.")
                         .processedAt(LocalDateTime.now())
                         .build();
-            } else if (randomValue < 0.85) {
-                // 5% 잔액 부족
+            } else if (randomValue < 0.97) {
+                // 2% 잔액 부족
                 response = BankingApiResponse.builder()
                         .transactionId(request.getTransactionId())
                         .status(BankingApiStatus.INSUFFICIENT_BALANCE)
@@ -62,8 +62,8 @@ public class MockBankingApiService implements BankingApiService {
                         .errorMessage("송금 계좌의 잔액이 부족합니다.")
                         .processedAt(LocalDateTime.now())
                         .build();
-            } else if (randomValue < 0.90) {
-                // 5% 계좌 오류
+            } else if (randomValue < 0.98) {
+                // 1% 계좌 오류
                 response = BankingApiResponse.builder()
                         .transactionId(request.getTransactionId())
                         .status(BankingApiStatus.INVALID_ACCOUNT)
@@ -71,8 +71,8 @@ public class MockBankingApiService implements BankingApiService {
                         .errorMessage("수신 계좌 정보가 올바르지 않습니다.")
                         .processedAt(LocalDateTime.now())
                         .build();
-            } else if (randomValue < 0.95) {
-                // 5% 시스템 오류
+            } else if (randomValue < 0.99) {
+                // 1% 시스템 오류
                 response = BankingApiResponse.builder()
                         .transactionId(request.getTransactionId())
                         .status(BankingApiStatus.SYSTEM_ERROR)

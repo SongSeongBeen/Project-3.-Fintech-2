@@ -5,6 +5,12 @@ spring:
     username: sa
     password: 
   
+  # Redis 자동 설정 비활성화 (개발 환경)
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+  
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:

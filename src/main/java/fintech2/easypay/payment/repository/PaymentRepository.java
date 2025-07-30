@@ -23,12 +23,12 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     
     Optional<Payment> findByPaymentId(String paymentId);
     
-    Page<Payment> findByMemberIdOrderByCreatedAtDesc(Long memberId, Pageable pageable);
+    Page<Payment> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
     
-    @Query("SELECT p FROM Payment p WHERE p.member.phoneNumber = :phoneNumber ORDER BY p.createdAt DESC")
+    @Query("SELECT p FROM Payment p WHERE p.user.phoneNumber = :phoneNumber ORDER BY p.createdAt DESC")
     Page<Payment> findByPhoneNumberOrderByCreatedAtDesc(@Param("phoneNumber") String phoneNumber, Pageable pageable);
     
-    Page<Payment> findByMemberIdAndStatusOrderByCreatedAtDesc(Long memberId, PaymentStatus status, Pageable pageable);
+    Page<Payment> findByUserIdAndStatusOrderByCreatedAtDesc(Long userId, PaymentStatus status, Pageable pageable);
     
     Page<Payment> findByMerchantIdOrderByCreatedAtDesc(String merchantId, Pageable pageable);
     
@@ -39,15 +39,15 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
                                        @Param("endDate") LocalDateTime endDate, 
                                        Pageable pageable);
     
-    @Query("SELECT p FROM Payment p WHERE p.member.id = :memberId AND p.status = :status ORDER BY p.createdAt DESC")
-    List<Payment> findByMemberIdAndStatus(@Param("memberId") Long memberId, 
+    @Query("SELECT p FROM Payment p WHERE p.user.id = :userId AND p.status = :status ORDER BY p.createdAt DESC")
+    List<Payment> findByUserIdAndStatus(@Param("userId") Long userId, 
                                         @Param("status") PaymentStatus status);
     
     boolean existsByPaymentId(String paymentId);
     
-    @Query("SELECT SUM(p.amount) FROM Payment p WHERE p.member.id = :memberId AND p.status = :status")
-    BigDecimal getTotalAmountByMemberIdAndStatus(@Param("memberId") Long memberId, 
+    @Query("SELECT SUM(p.amount) FROM Payment p WHERE p.user.id = :userId AND p.status = :status")
+    BigDecimal getTotalAmountByUserIdAndStatus(@Param("userId") Long userId, 
                                                @Param("status") PaymentStatus status);
     
-    Optional<Payment> findByPaymentIdAndMemberId(String paymentId, Long memberId);
+    Optional<Payment> findByPaymentIdAndUserId(String paymentId, Long userId);
 }
