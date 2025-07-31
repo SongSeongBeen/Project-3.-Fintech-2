@@ -14,7 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import fintech2.easypay.account.entity.Account;
 import fintech2.easypay.account.repository.AccountRepository;
+import fintech2.easypay.account.service.BalanceService;
 import fintech2.easypay.common.enums.AuditEventType;
+import fintech2.easypay.common.enums.TransactionType;
 import fintech2.easypay.audit.service.AuditLogService;
 import fintech2.easypay.audit.service.NotificationService;
 import fintech2.easypay.payment.exception.PaymentException;
@@ -45,6 +47,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
+    private final BalanceService balanceService;
     private final AuditLogService auditLogService;
     private final NotificationService notificationService;
     private final PaymentGatewayService paymentGatewayService;
@@ -66,9 +69,9 @@ public class PaymentService {
         Account account = accountRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new PaymentException(PaymentErrorCode.ACCOUNT_NOT_FOUND));
         
-        // 결제 방법이 BALANCE인 경우 잔액 확인
+        // 결제 방법이 BALANCE인 경우 잔액 확인 (BalanceService 사용)
         if (request.getPaymentMethod() == PaymentMethod.BALANCE) {
-            if (!account.hasEnoughBalance(request.getAmount())) {
+            if (!balanceService.hasSufficientBalance(account.getAccountNumber(), request.getAmount())) {
                 throw new PaymentException(PaymentErrorCode.INSUFFICIENT_BALANCE);
             }
         }
@@ -125,9 +128,13 @@ public class PaymentService {
                     throw new PaymentException(PaymentErrorCode.PAYMENT_FAILED, failureReason);
                 }
             } else {
-                // BALANCE 결제인 경우 즉시 승인 및 잔액 차감
-                account.withdraw(request.getAmount());
+                // BALANCE 결제인 경우 즉시 승인 및 잔액 차감 (BalanceService 사용)
+                balanceService.decrease(account.getAccountNumber(), request.getAmount(), 
+                    TransactionType.PAYMENT, "결제: " + request.getMerchantName(), paymentId, user.getId().toString());
                 payment.markAsApproved("BALANCE-" + paymentId, "잔액 결제");
+                
+                // 현재 잔액 조회 (로그용)
+                BigDecimal currentBalance = balanceService.getBalance(account.getAccountNumber());
                 
                 // 감사 로그 기록
                 auditLogService.logSuccess(
@@ -136,7 +143,7 @@ public class PaymentService {
                     AuditEventType.PAYMENT_SUCCESS,
                     String.format("잔액 결제 승인: %s (%s원)", request.getMerchantName(), request.getAmount()),
                     null, null,
-                    String.format("paymentId: %s, balance: %s", paymentId, account.getBalance()),
+                    String.format("paymentId: %s, balance: %s", paymentId, currentBalance),
                     null
                 );
             }

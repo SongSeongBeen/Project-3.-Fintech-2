@@ -45,7 +45,7 @@ public class SecurityConfig {
                 .requestMatchers("/js/**").permitAll()
                 .requestMatchers("/css/**").permitAll()
                 .requestMatchers("/favicon.ico").permitAll()
-                .requestMatchers("/", "/index.html", "/register.html", "/main.html", "/balance.html", "/alarm.html").permitAll()
+                .requestMatchers("/", "/index.html", "/register.html", "/login.html", "/main.html", "/balance.html", "/alarm.html", "/transfer.html", "/payment.html").permitAll()
                 // 계좌 관련 API (JWT 인증 필요)
                 .requestMatchers("/accounts/**").authenticated()
                 // 결제 관련 API (JWT 인증 필요)

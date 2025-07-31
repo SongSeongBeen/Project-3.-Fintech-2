@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>EasyPay - 송금하기</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <style>
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .transfer-form {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            -webkit-appearance: none;
+            -moz-appearance: textfield;
+        }
+        
+        /* 숫자 입력 필드의 스피너 제거 */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .amount-input {
+            position: relative;
+        }
+        
+        .amount-input input {
+            padding-right: 40px;
+        }
+        
+        .amount-input::after {
+            content: '원';
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-weight: 600;
+            pointer-events: none;
+        }
+        
+        .btn-primary {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            width: 100%;
+            padding: 15px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .current-balance {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .balance-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #28a745;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            color: #666;
+            margin: 20px 0;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .success {
+            color: #28a745;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>송금하기</h1>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-small" onclick="goBack()">뒤로가기</button>
+            </div>
+        </div>
+
+        <div class="transfer-form">
+            <div class="current-balance">
+                <div>현재 잔액</div>
+                <div class="balance-amount" id="currentBalance">로딩 중...</div>
+            </div>
+
+            <form id="transferForm">
+                <div class="form-group">
+                    <label for="receiverAccountNumber">받는 계좌번호</label>
+                    <input type="text" id="receiverAccountNumber" name="receiverAccountNumber" 
+                           placeholder="계좌번호를 입력하세요" required>
+                    <div class="error" id="accountError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="amount">송금 금액</label>
+                    <div class="amount-input">
+                        <input type="text" id="amount" name="amount" 
+                               placeholder="송금할 금액을 입력하세요" required>
+                    </div>
+                    <div class="error" id="amountError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="memo">송금 메모 (선택)</label>
+                    <textarea id="memo" name="memo" rows="3" 
+                              placeholder="송금 목적을 입력하세요 (최대 100자)"></textarea>
+                </div>
+
+                <div class="loading" id="loading">
+                    송금 처리 중
+                </div>
+
+                <button type="submit" class="btn-primary" id="submitBtn">
+                    송금하기
+                </button>
+                
+                <button type="button" class="btn-secondary" onclick="goBack()">
+                    취소
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            loadBalance();
+            
+            // 폼 제출 이벤트
+            document.getElementById('transferForm').addEventListener('submit', handleTransfer);
+            
+            // 금액 입력 필드에 포맷팅 이벤트 추가
+            document.getElementById('amount').addEventListener('input', formatCurrency);
+            document.getElementById('amount').addEventListener('blur', validateAmount);
+        });
+
+        // 인증 확인
+        function checkAuth() {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                window.location.href = '/index.html';
+            }
+        }
+
+        // 잔액 조회
+        async function loadBalance() {
+            const token = localStorage.getItem('accessToken');
+            
+            try {
+                const response = await fetch('/accounts/balance', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const balance = data.balance || 0;
+                    document.getElementById('currentBalance').textContent = 
+                        new Intl.NumberFormat('ko-KR').format(balance) + '원';
+                } else {
+                    console.error('Balance load failed:', response.status);
+                    document.getElementById('currentBalance').textContent = '조회 실패';
+                }
+            } catch (error) {
+                console.error('Balance load error:', error);
+                document.getElementById('currentBalance').textContent = '조회 실패';
+            }
+        }
+
+        // 송금 처리
+        async function handleTransfer(event) {
+            event.preventDefault();
+            
+            // 에러 메시지 초기화
+            document.getElementById('accountError').textContent = '';
+            document.getElementById('amountError').textContent = '';
+            
+            const receiverAccountNumber = document.getElementById('receiverAccountNumber').value;
+            const amountValue = document.getElementById('amount').value.replace(/[^0-9]/g, '');
+            const amount = parseInt(amountValue);
+            const memo = document.getElementById('memo').value;
+            
+            // 유효성 검사
+            if (!receiverAccountNumber || receiverAccountNumber.length < 10) {
+                document.getElementById('accountError').textContent = '올바른 계좌번호를 입력하세요.';
+                return;
+            }
+            
+            if (!amount || amount < 1000) {
+                document.getElementById('amountError').textContent = '최소 송금 금액은 1,000원입니다.';
+                return;
+            }
+            
+            if (amount > 1000000) {
+                document.getElementById('amountError').textContent = '최대 송금 금액은 1,000,000원입니다.';
+                return;
+            }
+
+            // UI 업데이트
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('submitBtn').disabled = true;
+
+            const token = localStorage.getItem('accessToken');
+            
+            console.log('송금 요청 시작:', {
+                receiverAccountNumber,
+                amount,
+                memo,
+                token: token ? 'present' : 'missing'
+            });
+            
+            try {
+                const response = await fetch('/transfers', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        receiverAccountNumber: receiverAccountNumber,
+                        amount: amount.toString(),
+                        memo: memo || '송금'
+                    })
+                });
+
+                console.log('송금 응답 상태:', response.status);
+                console.log('송금 응답 헤더:', response.headers);
+
+                let data;
+                try {
+                    data = await response.json();
+                    console.log('송금 응답 데이터:', data);
+                } catch (jsonError) {
+                    console.error('JSON 파싱 실패:', jsonError);
+                    const text = await response.text();
+                    console.log('응답 텍스트:', text);
+                    throw new Error('서버 응답을 해석할 수 없습니다.');
+                }
+
+                if (response.ok) {
+                    alert(`송금이 완료되었습니다!\n송금액: ${new Intl.NumberFormat('ko-KR').format(amount)}원\n받는계좌: ${receiverAccountNumber}`);
+                    window.location.href = '/main.html';
+                } else {
+                    let errorMessage = '송금에 실패했습니다.';
+                    if (data.message) {
+                        errorMessage = data.message;
+                    } else if (data.error === 'INSUFFICIENT_BALANCE') {
+                        errorMessage = '잔액이 부족합니다.';
+                    } else if (data.error === 'ACCOUNT_NOT_FOUND') {
+                        errorMessage = '받는 계좌를 찾을 수 없습니다.';
+                    }
+                    console.error('송금 실패:', errorMessage);
+                    alert(`송금 실패: ${errorMessage}\n상태 코드: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Transfer error:', error);
+                alert(`송금 처리 중 오류가 발생했습니다.\n에러: ${error.message}`);
+            } finally {
+                // UI 복원
+                document.getElementById('loading').classList.remove('show');
+                document.getElementById('submitBtn').disabled = false;
+            }
+        }
+
+        // 뒤로가기
+        function goBack() {
+            window.location.href = '/main.html';
+        }
+        
+        // 통화 포맷팅 함수
+        function formatCurrency(event) {
+            let value = event.target.value;
+            
+            // 숫자가 아닌 문자 제거
+            value = value.replace(/[^0-9]/g, '');
+            
+            // 콤마 추가
+            if (value) {
+                value = parseInt(value).toLocaleString('ko-KR');
+            }
+            
+            event.target.value = value;
+        }
+        
+        // 금액 유효성 검사
+        function validateAmount() {
+            const input = document.getElementById('amount');
+            const value = input.value.replace(/[^0-9]/g, '');
+            const amount = parseInt(value) || 0;
+            
+            if (value && amount < 1000) {
+                document.getElementById('amountError').textContent = '최소 송금 금액은 1,000원입니다.';
+            } else if (value && amount > 1000000) {
+                document.getElementById('amountError').textContent = '최대 송금 금액은 1,000,000원입니다.';
+            } else {
+                document.getElementById('amountError').textContent = '';
+            }
+        }
+    </script>
+</body>
+</html>

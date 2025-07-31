@@ -1,8 +1,10 @@
 package fintech2.easypay.account.service;
 
+import fintech2.easypay.account.entity.Account;
 import fintech2.easypay.account.entity.AccountBalance;
 import fintech2.easypay.account.entity.TransactionHistory;
 import fintech2.easypay.account.repository.AccountBalanceRepository;
+import fintech2.easypay.account.repository.AccountRepository;
 import fintech2.easypay.account.repository.TransactionHistoryRepository;
 import fintech2.easypay.audit.service.AlarmService;
 import fintech2.easypay.common.enums.TransactionStatus;
@@ -30,6 +32,7 @@ import java.util.UUID;
 public class BalanceService {
 
     private final AccountBalanceRepository accountBalanceRepository;
+    private final AccountRepository accountRepository;
     private final TransactionHistoryRepository transactionHistoryRepository;
     private final AlarmService alarmService;
 
@@ -98,9 +101,17 @@ public class BalanceService {
             throw new InsufficientBalanceException("잔액이 부족합니다. 현재 잔액: " + balanceBefore);
         }
 
-        // 잔액 업데이트
+        // 잔액 업데이트 (AccountBalance)
         balance.setBalance(balanceAfter);
         accountBalanceRepository.save(balance);
+        
+        // Account 엔티티도 동일하게 업데이트 (TransferService 호환성을 위해)
+        accountRepository.findByAccountNumber(accountNumber)
+                .ifPresent(account -> {
+                    account.setBalance(balanceAfter);
+                    accountRepository.save(account);
+                    log.debug("Account 엔티티 잔액도 동기화: {} -> {}", balanceBefore, balanceAfter);
+                });
 
         // 거래 내역 기록
         String finalReferenceId = referenceId != null ? referenceId : UUID.randomUUID().toString();
