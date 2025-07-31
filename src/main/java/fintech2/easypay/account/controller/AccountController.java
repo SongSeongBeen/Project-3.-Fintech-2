@@ -111,4 +111,20 @@ public class AccountController {
     public ResponseEntity<?> getTransactionHistory(@PathVariable String accountNumber, @RequestHeader("Authorization") String token) {
         return accountService.getTransactionHistory(accountNumber);
     }
+    
+    @PostMapping("/sync-account-balance")
+    public ResponseEntity<?> syncAccountBalance(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        if (userPrincipal == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "UNAUTHORIZED", "message", "인증이 필요합니다"));
+        }
+        
+        try {
+            return accountService.syncAccountBalance(userPrincipal.getAccountNumber());
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "SYNC_FAILED");
+            error.put("message", "Account 엔티티 동기화 실패");
+            return ResponseEntity.status(500).body(error);
+        }
+    }
 } 

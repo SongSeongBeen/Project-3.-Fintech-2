@@ -1,8 +1,10 @@
 package fintech2.easypay.account.service;
 
+import fintech2.easypay.account.entity.Account;
 import fintech2.easypay.account.entity.AccountBalance;
 import fintech2.easypay.account.entity.TransactionHistory;
 import fintech2.easypay.account.repository.AccountBalanceRepository;
+import fintech2.easypay.account.repository.AccountRepository;
 import fintech2.easypay.account.repository.TransactionHistoryRepository;
 import fintech2.easypay.audit.service.AuditLogService;
 import fintech2.easypay.audit.service.AlarmService;
@@ -33,6 +35,7 @@ import java.util.Optional;
 public class AccountService {
 
     private final AccountBalanceRepository accountBalanceRepository;
+    private final AccountRepository accountRepository;
     private final TransactionHistoryRepository transactionHistoryRepository;
     private final BalanceService balanceService; // 중앙화된 잔액 서비스
     private final AuditLogService auditLogService;
@@ -150,6 +153,41 @@ public class AccountService {
             log.error("거래내역 조회 중 오류 발생: {}", e.getMessage(), e);
             auditLogService.logError("TRANSACTION_HISTORY", "ACCOUNT", accountNumber, "거래내역 조회 실패", e);
             throw new RuntimeException("거래내역 조회 중 오류가 발생했습니다", e);
+        }
+    }
+    
+    /**
+     * Account 엔티티와 AccountBalance 엔티티 잔액 동기화
+     */
+    @Transactional
+    public ResponseEntity<?> syncAccountBalance(String accountNumber) {
+        try {
+            // AccountBalance에서 현재 잔액 조회
+            BigDecimal currentBalance = balanceService.getBalance(accountNumber);
+            
+            // Account 엔티티 조회 및 잔액 업데이트
+            Optional<Account> accountOpt = accountRepository.findByAccountNumber(accountNumber);
+            if (accountOpt.isPresent()) {
+                Account account = accountOpt.get();
+                BigDecimal oldBalance = account.getBalance();
+                account.setBalance(currentBalance);
+                accountRepository.save(account);
+                
+                Map<String, Object> response = new HashMap<>();
+                response.put("accountNumber", accountNumber);
+                response.put("oldBalance", oldBalance);
+                response.put("newBalance", currentBalance);
+                response.put("message", "Account 엔티티 잔액이 동기화되었습니다");
+                
+                log.info("Account 엔티티 잔액 동기화 완료: {} -> {}", oldBalance, currentBalance);
+                return ResponseEntity.ok(response);
+            } else {
+                throw new AccountNotFoundException("Account 엔티티를 찾을 수 없습니다: " + accountNumber);
+            }
+            
+        } catch (Exception e) {
+            log.error("Account 엔티티 동기화 실패: {}", e.getMessage(), e);
+            throw new RuntimeException("Account 엔티티 동기화 중 오류가 발생했습니다", e);
         }
     }
 } 

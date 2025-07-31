@@ -89,11 +89,11 @@ function checkNotifications() {
 
 // 서비스 페이지 이동
 function goToTransfer() {
-    alert('송금 서비스는 준비 중입니다.');
+    window.location.href = '/transfer.html';
 }
 
 function goToPayment() {
-    alert('결제 서비스는 준비 중입니다.');
+    window.location.href = '/payment.html';
 }
 
 function goToBalance() {

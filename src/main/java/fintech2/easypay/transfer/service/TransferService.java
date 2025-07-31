@@ -11,7 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import fintech2.easypay.account.entity.Account;
 import fintech2.easypay.account.repository.AccountRepository;
+import fintech2.easypay.account.service.BalanceService;
 import fintech2.easypay.common.enums.AuditEventType;
+import fintech2.easypay.common.enums.TransactionType;
 import fintech2.easypay.audit.service.AuditLogService;
 import fintech2.easypay.audit.service.NotificationService;
 import fintech2.easypay.common.BusinessException;
@@ -42,6 +44,7 @@ public class TransferService {
     private final TransferRepository transferRepository;
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
+    private final BalanceService balanceService;
     private final AuditLogService auditLogService;
     private final NotificationService notificationService;
     private final BankingApiService bankingApiService;
@@ -98,8 +101,8 @@ public class TransferService {
                     .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
         }
         
-        // 잔액 충분성 검증
-        if (!senderAccountLocked.hasEnoughBalance(request.getAmount())) {
+        // 잔액 충분성 검증 (BalanceService 사용)
+        if (!balanceService.hasSufficientBalance(senderAccountLocked.getAccountNumber(), request.getAmount())) {
             throw new BusinessException(ErrorCode.INSUFFICIENT_BALANCE);
         }
         
@@ -142,9 +145,11 @@ public class TransferService {
             
             // 4. API 응답에 따른 처리
             if (apiResponse.getStatus() == BankingApiStatus.SUCCESS) {
-                // 4-1. 성공 시 잔액 이동
-                senderAccountLocked.withdraw(request.getAmount());
-                receiverAccountLocked.deposit(request.getAmount());
+                // 4-1. 성공 시 잔액 이동 (BalanceService 사용)
+                balanceService.decrease(senderAccountLocked.getAccountNumber(), request.getAmount(), 
+                    TransactionType.TRANSFER_OUT, "송금 출금: " + request.getMemo(), transactionId, sender.getId().toString());
+                balanceService.increase(receiverAccountLocked.getAccountNumber(), request.getAmount(), 
+                    TransactionType.TRANSFER_IN, "송금 입금: " + request.getMemo(), transactionId, receiver.getId().toString());
                 
                 // 4-2. 송금 완료 상태로 변경
                 transfer.markAsCompleted();

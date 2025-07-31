@@ -11,6 +11,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (registerForm) {
         registerForm.addEventListener('submit', handleRegister);
     }
+
+    // 휴대폰 번호 자동 포맷팅 이벤트 리스너 추가
+    const phoneInputs = document.querySelectorAll('#phoneNumber, #regPhoneNumber');
+    phoneInputs.forEach(input => {
+        if (input) {
+            input.addEventListener('input', formatPhoneNumber);
+            input.addEventListener('keydown', filterPhoneInput);
+        }
+    });
 });
 
 // 로그인 처리
@@ -151,6 +160,51 @@ function goToRegister() {
 
 function goToLogin() {
     window.location.href = '/index.html';
+}
+
+// 휴대폰 번호 입력 필터링 (숫자와 백스페이스, 삭제키만 허용)
+function filterPhoneInput(event) {
+    const allowedKeys = [
+        'Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
+        'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+        'Home', 'End'
+    ];
+    
+    // 허용된 키이거나 숫자키인 경우만 허용
+    if (allowedKeys.includes(event.key) || 
+        (event.key >= '0' && event.key <= '9') ||
+        (event.ctrlKey && (event.key === 'a' || event.key === 'c' || event.key === 'v'))) {
+        return;
+    }
+    
+    // 그 외의 키는 차단
+    event.preventDefault();
+}
+
+// 휴대폰 번호 자동 포맷팅 (000-0000-0000 형식)
+function formatPhoneNumber(event) {
+    let value = event.target.value;
+    
+    // 숫자만 추출
+    const numbersOnly = value.replace(/\D/g, '');
+    
+    // 11자리를 초과하지 않도록 제한
+    const limitedNumbers = numbersOnly.substring(0, 11);
+    
+    // 자동 포맷팅
+    let formatted = '';
+    
+    if (limitedNumbers.length <= 3) {
+        formatted = limitedNumbers;
+    } else if (limitedNumbers.length <= 7) {
+        formatted = limitedNumbers.substring(0, 3) + '-' + limitedNumbers.substring(3);
+    } else {
+        formatted = limitedNumbers.substring(0, 3) + '-' + 
+                   limitedNumbers.substring(3, 7) + '-' + 
+                   limitedNumbers.substring(7);
+    }
+    
+    event.target.value = formatted;
 }
 
 // 알림 메시지 표시
