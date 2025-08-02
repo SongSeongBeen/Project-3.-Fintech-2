@@ -2,6 +2,7 @@ package fintech2.easypay.transfer.service;
 
 import fintech2.easypay.account.entity.Account;
 import fintech2.easypay.account.repository.AccountRepository;
+import fintech2.easypay.account.service.BalanceService;
 import fintech2.easypay.audit.service.AuditLogService;
 import fintech2.easypay.audit.service.NotificationService;
 import fintech2.easypay.auth.entity.User;
@@ -40,6 +41,7 @@ class TransferServiceScenarioTest {
     @Mock private AuditLogService auditLogService;
     @Mock private NotificationService notificationService;
     @Mock private BankingApiService bankingApiService;
+    @Mock private BalanceService balanceService;
 
     private TransferService transferService;
 
@@ -62,63 +64,52 @@ class TransferServiceScenarioTest {
             transferRepository,
             accountRepository,
             userRepository,
+            balanceService,
             auditLogService,
             notificationService,
             bankingApiService
         );
 
         // Given: 가상 사용자 데이터 생성
-        alice = new User(
-            1L,
-            "010-1111-1111",
-            "encodedPasswordAlice",
-            "앨리스",
-            LocalDateTime.now().minusDays(100),
-            "VA1111111111",
-            0,
-            false,
-            null,
-            null
-        );
+        alice = User.builder()
+                .id(1L)
+                .phoneNumber("010-1111-1111")
+                .email("alice@example.com")
+                .password("encodedPasswordAlice")
+                .name("앨리스")
+                .createdAt(LocalDateTime.now().minusDays(100))
+                .accountNumber("VA1111111111")
+                .build();
 
-        bob = new User(
-            2L,
-            "010-2222-2222", 
-            "encodedPasswordBob",
-            "밥",
-            LocalDateTime.now().minusDays(500),  // VIP 장기 고객
-            "VA2222222222",
-            0,
-            false,
-            null,
-            null
-        );
+        bob = User.builder()
+                .id(2L)
+                .phoneNumber("010-2222-2222")
+                .email("bob@example.com")
+                .password("encodedPasswordBob")
+                .name("밥")
+                .createdAt(LocalDateTime.now().minusDays(500))  // VIP 장기 고객
+                .accountNumber("VA2222222222")
+                .build();
 
-        charlie = new User(
-            3L,
-            "010-3333-3333",
-            "encodedPasswordCharlie", 
-            "찰리",
-            LocalDateTime.now().minusDays(5),   // 신규 고객
-            "VA3333333333",
-            0,
-            false,
-            null,
-            null
-        );
+        charlie = User.builder()
+                .id(3L)
+                .phoneNumber("010-3333-3333")
+                .email("charlie@example.com")
+                .password("encodedPasswordCharlie")
+                .name("찰리")
+                .createdAt(LocalDateTime.now().minusDays(5))   // 신규 고객
+                .accountNumber("VA3333333333")
+                .build();
 
-        diana = new User(
-            4L,
-            "010-4444-4444",
-            "encodedPasswordDiana",
-            "다이애나",
-            LocalDateTime.now().minusDays(30),
-            "VA4444444444",
-            0,
-            false,
-            null,
-            null
-        );
+        diana = User.builder()
+                .id(4L)
+                .phoneNumber("010-4444-4444")
+                .email("diana@example.com")
+                .password("encodedPasswordDiana")
+                .name("다이애나")
+                .createdAt(LocalDateTime.now().minusDays(30))
+                .accountNumber("VA4444444444")
+                .build();
 
         // Given: 가상 계좌 데이터 생성
         aliceAccount = Account.builder()
