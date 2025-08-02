@@ -2,9 +2,9 @@ name: EasyPay PR Checks
 
 on:
   push:
-    branches: [ dahee]
+    branches: [ main ]
   pull_request:
-    branches: [ dahee ]
+    branches: [ main ]
 
 env:
   JAVA_VERSION: '21'
