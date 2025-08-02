@@ -40,6 +40,281 @@
             background-color: rgba(255, 255, 255, 0.1);
         }
         
+        .settings-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 24px;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .settings-icon:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+        
+        /* 설정 드롭다운 메뉴 */
+        .settings-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            min-width: 200px;
+            z-index: 1000;
+            overflow: hidden;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+        
+        .settings-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .settings-dropdown::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            right: 15px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 8px solid white;
+        }
+        
+        .settings-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            color: #333;
+            text-decoration: none;
+            transition: background-color 0.2s;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+        }
+        
+        .settings-menu-item:last-child {
+            border-bottom: none;
+        }
+        
+        .settings-menu-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .settings-menu-item .icon {
+            margin-right: 12px;
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .settings-menu-item .text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .settings-menu-item .description {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        /* PIN 설정 모달 스타일 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            position: relative;
+            animation: modalSlideUp 0.3s ease-out;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-header {
+            padding: 20px 20px 10px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #666;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .pin-form-group {
+            margin-bottom: 20px;
+        }
+
+        .pin-form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .pin-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            text-align: center;
+            letter-spacing: 8px;
+        }
+
+        .pin-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .pin-input::placeholder {
+            letter-spacing: normal;
+            text-align: left;
+        }
+
+        .pin-error {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 6px;
+            min-height: 18px;
+        }
+
+        .pin-success {
+            color: #28a745;
+            font-size: 12px;
+            margin-top: 6px;
+            min-height: 18px;
+        }
+
+        .modal-actions {
+            padding: 0 20px 20px 20px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn-cancel {
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+
+        .modal-btn-cancel:hover {
+            background: #e9ecef;
+            color: #5a6268;
+        }
+
+        .modal-btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .modal-btn-primary:hover {
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+            transform: translateY(-1px);
+        }
+
+        .modal-btn-primary:disabled {
+            background: #d6d8db;
+            color: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .pin-status-info {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .pin-status-info.has-pin {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .pin-status-info.no-pin {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
         .notification-badge {
             position: absolute;
             top: -5px;
@@ -84,6 +359,32 @@
                     🔔
                     <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
                 </div>
+                <div class="settings-icon" onclick="toggleSettings()">
+                    ⚙️
+                    <div class="settings-dropdown" id="settingsDropdown">
+                        <div class="settings-menu-item" onclick="openPinSettings()">
+                            <span class="icon">🔐</span>
+                            <div>
+                                <div class="text">PIN 관리</div>
+                                <div class="description">PIN 등록 및 변경</div>
+                            </div>
+                        </div>
+                        <div class="settings-menu-item" onclick="openAccountSettings()">
+                            <span class="icon">👤</span>
+                            <div>
+                                <div class="text">계정 관리</div>
+                                <div class="description">개인정보 수정</div>
+                            </div>
+                        </div>
+                        <div class="settings-menu-item" onclick="openSecuritySettings()">
+                            <span class="icon">🛡️</span>
+                            <div>
+                                <div class="text">보안 설정</div>
+                                <div class="description">로그인 보안 관리</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <button class="btn btn-small" onclick="logout()">로그아웃</button>
             </div>
         </div>
@@ -117,5 +418,380 @@
             </div>
         </div>
     </div>
+
+    <!-- PIN 설정 모달 -->
+    <div class="modal-overlay" id="pinModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="pinModalTitle">PIN 관리</h3>
+                <button class="modal-close" onclick="closePinModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="pin-status-info" id="pinStatusInfo">
+                    PIN 상태를 확인하는 중...
+                </div>
+                
+                <!-- PIN 등록 폼 -->
+                <div id="pinRegisterForm" style="display: none;">
+                    <div class="pin-form-group">
+                        <label class="pin-form-label" for="currentPassword">현재 비밀번호</label>
+                        <input type="password" class="pin-input" id="currentPassword" 
+                               placeholder="현재 로그인 비밀번호를 입력하세요" style="letter-spacing: normal; text-align: left;">
+                        <div class="pin-error" id="currentPasswordError"></div>
+                    </div>
+                    <div class="pin-form-group">
+                        <label class="pin-form-label" for="newPin">새로운 PIN (6자리)</label>
+                        <input type="password" class="pin-input" id="newPin" 
+                               placeholder="6자리 숫자 입력" maxlength="6">
+                        <div class="pin-error" id="newPinError"></div>
+                    </div>
+                    <div class="pin-form-group">
+                        <label class="pin-form-label" for="confirmPin">PIN 확인</label>
+                        <input type="password" class="pin-input" id="confirmPin" 
+                               placeholder="PIN 재입력" maxlength="6">
+                        <div class="pin-error" id="confirmPinError"></div>
+                    </div>
+                </div>
+                
+                <!-- PIN 변경 폼 -->
+                <div id="pinChangeForm" style="display: none;">
+                    <div class="pin-form-group">
+                        <label class="pin-form-label" for="currentPin">현재 PIN</label>
+                        <input type="password" class="pin-input" id="currentPin" 
+                               placeholder="현재 PIN 입력" maxlength="6">
+                        <div class="pin-error" id="currentPinError"></div>
+                    </div>
+                    <div class="pin-form-group">
+                        <label class="pin-form-label" for="newPinChange">새로운 PIN (6자리)</label>
+                        <input type="password" class="pin-input" id="newPinChange" 
+                               placeholder="새로운 PIN 입력" maxlength="6">
+                        <div class="pin-error" id="newPinChangeError"></div>
+                    </div>
+                    <div class="pin-form-group">
+                        <label class="pin-form-label" for="confirmPinChange">새로운 PIN 확인</label>
+                        <input type="password" class="pin-input" id="confirmPinChange" 
+                               placeholder="새로운 PIN 재입력" maxlength="6">
+                        <div class="pin-error" id="confirmPinChangeError"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" onclick="closePinModal()">취소</button>
+                <button class="modal-btn modal-btn-primary" id="pinSubmitBtn" onclick="submitPin()">등록</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 설정 드롭다운 토글
+        function toggleSettings() {
+            const dropdown = document.getElementById('settingsDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // 외부 클릭 시 드롭다운 닫기
+        document.addEventListener('click', function(e) {
+            const settingsIcon = document.querySelector('.settings-icon');
+            if (!settingsIcon.contains(e.target)) {
+                document.getElementById('settingsDropdown').classList.remove('show');
+            }
+        });
+
+        // PIN 관리 변수
+        let currentPinMode = 'register'; // 'register' 또는 'change'
+        let userPinStatus = null;
+
+        // PIN 설정 열기
+        async function openPinSettings() {
+            document.getElementById('settingsDropdown').classList.remove('show');
+            
+            // PIN 상태 확인
+            await checkPinStatus();
+            
+            document.getElementById('pinModal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // PIN 상태 확인
+        async function checkPinStatus() {
+            const token = localStorage.getItem('accessToken');
+            
+            try {
+                const response = await fetch('/pin/status', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    userPinStatus = data;
+                    updatePinModal(data);
+                } else {
+                    showPinError('PIN 상태를 확인할 수 없습니다.');
+                }
+            } catch (error) {
+                console.error('PIN 상태 확인 오류:', error);
+                showPinError('PIN 상태 확인 중 오류가 발생했습니다.');
+            }
+        }
+
+        // PIN 모달 업데이트
+        function updatePinModal(pinStatus) {
+            const statusInfo = document.getElementById('pinStatusInfo');
+            const registerForm = document.getElementById('pinRegisterForm');
+            const changeForm = document.getElementById('pinChangeForm');
+            const submitBtn = document.getElementById('pinSubmitBtn');
+            const modalTitle = document.getElementById('pinModalTitle');
+            
+            if (pinStatus.hasPinSet) {
+                // PIN이 이미 설정된 경우
+                currentPinMode = 'change';
+                modalTitle.textContent = 'PIN 변경';
+                statusInfo.textContent = 'PIN이 설정되어 있습니다. 새로운 PIN으로 변경하시겠습니까?';
+                statusInfo.className = 'pin-status-info has-pin';
+                registerForm.style.display = 'none';
+                changeForm.style.display = 'block';
+                submitBtn.textContent = '변경';
+                
+                if (pinStatus.isPinLocked) {
+                    statusInfo.textContent = `PIN이 잠금되었습니다: ${pinStatus.lockReason}`;
+                    statusInfo.className = 'pin-status-info no-pin';
+                    changeForm.style.display = 'none';
+                    submitBtn.disabled = true;
+                }
+            } else {
+                // PIN이 설정되지 않은 경우
+                currentPinMode = 'register';
+                modalTitle.textContent = 'PIN 등록';
+                statusInfo.textContent = 'PIN이 설정되지 않았습니다. 보안을 위해 PIN을 등록해주세요.';
+                statusInfo.className = 'pin-status-info no-pin';
+                registerForm.style.display = 'block';
+                changeForm.style.display = 'none';
+                submitBtn.textContent = '등록';
+                submitBtn.disabled = false;
+            }
+        }
+
+        // PIN 모달 닫기
+        function closePinModal() {
+            document.getElementById('pinModal').classList.remove('show');
+            document.body.style.overflow = '';
+            
+            // 폼 초기화
+            clearPinForm();
+        }
+
+        // PIN 폼 초기화
+        function clearPinForm() {
+            // 모든 입력 필드 초기화
+            const inputs = document.querySelectorAll('#pinModal input');
+            inputs.forEach(input => {
+                input.value = '';
+            });
+            
+            // 에러 메시지 초기화
+            const errors = document.querySelectorAll('#pinModal .pin-error');
+            errors.forEach(error => {
+                error.textContent = '';
+            });
+        }
+
+        // PIN 에러 표시
+        function showPinError(message) {
+            const statusInfo = document.getElementById('pinStatusInfo');
+            statusInfo.textContent = message;
+            statusInfo.className = 'pin-status-info no-pin';
+        }
+
+        // PIN 제출
+        async function submitPin() {
+            if (currentPinMode === 'register') {
+                await registerPin();
+            } else {
+                await changePin();
+            }
+        }
+
+        // PIN 등록
+        async function registerPin() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPin = document.getElementById('newPin').value;
+            const confirmPin = document.getElementById('confirmPin').value;
+            
+            // 유효성 검사
+            if (!validatePinRegistration(currentPassword, newPin, confirmPin)) {
+                return;
+            }
+            
+            const token = localStorage.getItem('accessToken');
+            
+            try {
+                const response = await fetch('/pin/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        pin: newPin,
+                        currentPassword: currentPassword
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    alert('PIN이 성공적으로 등록되었습니다.');
+                    closePinModal();
+                } else {
+                    showPinFormError('newPin', data.message || 'PIN 등록에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('PIN 등록 오류:', error);
+                showPinFormError('newPin', 'PIN 등록 중 오류가 발생했습니다.');
+            }
+        }
+
+        // PIN 변경
+        async function changePin() {
+            const currentPin = document.getElementById('currentPin').value;
+            const newPin = document.getElementById('newPinChange').value;
+            const confirmPin = document.getElementById('confirmPinChange').value;
+            
+            // 유효성 검사
+            if (!validatePinChange(currentPin, newPin, confirmPin)) {
+                return;
+            }
+            
+            const token = localStorage.getItem('accessToken');
+            
+            try {
+                const response = await fetch('/pin/change', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        currentPin: currentPin,
+                        newPin: newPin
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    alert('PIN이 성공적으로 변경되었습니다.');
+                    closePinModal();
+                } else {
+                    showPinFormError('currentPin', data.message || 'PIN 변경에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('PIN 변경 오류:', error);
+                showPinFormError('currentPin', 'PIN 변경 중 오류가 발생했습니다.');
+            }
+        }
+
+        // PIN 등록 유효성 검사
+        function validatePinRegistration(currentPassword, newPin, confirmPin) {
+            clearPinFormErrors();
+            
+            let isValid = true;
+            
+            if (!currentPassword) {
+                showPinFormError('currentPassword', '현재 비밀번호를 입력해주세요.');
+                isValid = false;
+            }
+            
+            if (!newPin || newPin.length !== 6 || !/^\d{6}$/.test(newPin)) {
+                showPinFormError('newPin', 'PIN은 6자리 숫자여야 합니다.');
+                isValid = false;
+            }
+            
+            if (newPin !== confirmPin) {
+                showPinFormError('confirmPin', 'PIN이 일치하지 않습니다.');
+                isValid = false;
+            }
+            
+            return isValid;
+        }
+
+        // PIN 변경 유효성 검사
+        function validatePinChange(currentPin, newPin, confirmPin) {
+            clearPinFormErrors();
+            
+            let isValid = true;
+            
+            if (!currentPin || currentPin.length !== 6 || !/^\d{6}$/.test(currentPin)) {
+                showPinFormError('currentPin', '현재 PIN을 정확히 입력해주세요.');
+                isValid = false;
+            }
+            
+            if (!newPin || newPin.length !== 6 || !/^\d{6}$/.test(newPin)) {
+                showPinFormError('newPinChange', 'PIN은 6자리 숫자여야 합니다.');
+                isValid = false;
+            }
+            
+            if (currentPin === newPin) {
+                showPinFormError('newPinChange', '새로운 PIN은 현재 PIN과 달라야 합니다.');
+                isValid = false;
+            }
+            
+            if (newPin !== confirmPin) {
+                showPinFormError('confirmPinChange', 'PIN이 일치하지 않습니다.');
+                isValid = false;
+            }
+            
+            return isValid;
+        }
+
+        // PIN 폼 에러 메시지 표시
+        function showPinFormError(fieldName, message) {
+            const errorElement = document.getElementById(fieldName + 'Error');
+            if (errorElement) {
+                errorElement.textContent = message;
+            }
+        }
+
+        // PIN 폼 에러 메시지 초기화
+        function clearPinFormErrors() {
+            const errors = document.querySelectorAll('#pinModal .pin-error');
+            errors.forEach(error => {
+                error.textContent = '';
+            });
+        }
+
+        // 임시 계정 설정 함수 (추후 구현)
+        function openAccountSettings() {
+            document.getElementById('settingsDropdown').classList.remove('show');
+            alert('계정 관리 기능은 추후 구현 예정입니다.');
+        }
+
+        // 임시 보안 설정 함수 (추후 구현)
+        function openSecuritySettings() {
+            document.getElementById('settingsDropdown').classList.remove('show');
+            alert('보안 설정 기능은 추후 구현 예정입니다.');
+        }
+
+        // 숫자만 입력 허용
+        document.addEventListener('DOMContentLoaded', function() {
+            const pinInputs = document.querySelectorAll('#newPin, #confirmPin, #currentPin, #newPinChange, #confirmPinChange');
+            
+            pinInputs.forEach(input => {
+                input.addEventListener('input', function(e) {
+                    // 숫자가 아닌 문자 제거
+                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                    
+                    // 6자리 제한
+                    if (e.target.value.length > 6) {
+                        e.target.value = e.target.value.slice(0, 6);
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html> 
