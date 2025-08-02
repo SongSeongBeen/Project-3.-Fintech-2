@@ -1,3 +1,7 @@
+// 중복검사 완료 여부 추적 변수
+let emailDuplicateChecked = false;
+let phoneDuplicateChecked = false;
+
 // 페이지 로드 시 실행
 document.addEventListener('DOMContentLoaded', function() {
     // 로그인 폼 처리
@@ -20,6 +24,36 @@ document.addEventListener('DOMContentLoaded', function() {
             input.addEventListener('keydown', filterPhoneInput);
         }
     });
+
+    // 비밀번호 검증 이벤트 리스너 추가
+    const passwordInput = document.getElementById('regPassword');
+    const confirmPasswordInput = document.getElementById('regConfirmPassword');
+    
+    if (passwordInput) {
+        passwordInput.addEventListener('input', validatePassword);
+    }
+    
+    if (confirmPasswordInput) {
+        confirmPasswordInput.addEventListener('input', validateConfirmPassword);
+    }
+
+    // 중복검사 상태 초기화 이벤트 리스너 추가
+    const phoneInput = document.getElementById('regPhoneNumber');
+    const emailInput = document.getElementById('regEmail');
+    
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function() {
+            phoneDuplicateChecked = false;
+            validatePhoneFormat();
+        });
+    }
+    
+    if (emailInput) {
+        emailInput.addEventListener('input', function() {
+            emailDuplicateChecked = false;
+            validateEmailFormat();
+        });
+    }
 });
 
 // 로그인 처리
@@ -92,12 +126,44 @@ async function handleRegister(e) {
     e.preventDefault();
     
     const phoneNumber = document.getElementById('regPhoneNumber').value;
+    const email = document.getElementById('regEmail').value;
     const password = document.getElementById('regPassword').value;
     const name = document.getElementById('regName').value;
     const loading = document.getElementById('registerLoading');
     
-    if (!phoneNumber || !password || !name) {
-        showAlert('registerAlert', '모든 항목을 입력해주세요.', 'error');
+    const confirmPassword = document.getElementById('regConfirmPassword').value;
+    
+    if (!phoneNumber || !password || !name || !email || !confirmPassword) {
+        showAlert('registerAlert', '모든 필수 항목을 입력해주세요.', 'error');
+        return;
+    }
+
+    // 중복검사 완료 여부 확인
+    let missingChecks = [];
+    let focusField = null;
+
+    if (!phoneDuplicateChecked) {
+        missingChecks.push('휴대폰 번호');
+        if (!focusField) focusField = 'regPhoneNumber';
+    }
+
+    if (!emailDuplicateChecked) {
+        missingChecks.push('이메일');
+        if (!focusField) focusField = 'regEmail';
+    }
+
+    if (missingChecks.length > 0) {
+        const message = `${missingChecks.join(', ')} 중복검사를 해주세요.`;
+        showAlert('registerAlert', message, 'error');
+        
+        // 해당 필드로 커서 이동
+        if (focusField) {
+            const field = document.getElementById(focusField);
+            if (field) {
+                field.focus();
+                field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
         return;
     }
 
@@ -108,9 +174,25 @@ async function handleRegister(e) {
         return;
     }
 
-    // 비밀번호 길이 검증
-    if (password.length < 6) {
-        showAlert('registerAlert', '비밀번호는 6자 이상이어야 합니다.', 'error');
+    // 이메일 형식 검증 (이메일 필수)
+    if (!isValidEmail(email)) {
+        showAlert('registerAlert', '올바른 이메일 형식이 아닙니다.', 'error');
+        return;
+    }
+
+    // 비밀번호 규칙 검증
+    if (!isValidPassword(password)) {
+        if (password.length < 6) {
+            showAlert('registerAlert', '비밀번호는 6자 이상이어야 합니다.', 'error');
+        } else if (password.length >= 8) {
+            showAlert('registerAlert', '8자 이상인 경우 영문+숫자 조합이어야 합니다.', 'error');
+        }
+        return;
+    }
+
+    // 비밀번호 확인 검증
+    if (password !== confirmPassword) {
+        showAlert('registerAlert', '비밀번호가 일치하지 않습니다.', 'error');
         return;
     }
 
@@ -124,6 +206,7 @@ async function handleRegister(e) {
             },
             body: JSON.stringify({
                 phoneNumber: phoneNumber,
+                email: email || null,
                 password: password,
                 name: name
             })
@@ -150,6 +233,214 @@ async function handleRegister(e) {
         showAlert('registerAlert', '서버 연결에 실패했습니다.', 'error');
     } finally {
         loading.classList.remove('show');
+    }
+}
+
+// 이메일 중복 검증
+async function checkEmailDuplicate() {
+    console.log('이메일 중복검사 함수 호출됨');
+    const email = document.getElementById('regEmail').value.trim();
+    const statusElement = document.getElementById('emailStatus');
+    
+    if (!email) {
+        statusElement.textContent = '이메일은 필수입니다.';
+        statusElement.className = 'email-status error';
+        return;
+    }
+    
+    if (!isValidEmail(email)) {
+        statusElement.textContent = '올바른 이메일 형식이 아닙니다. (@ 포함)';
+        statusElement.className = 'email-status error';
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/auth/check-email?email=${encodeURIComponent(email)}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            statusElement.textContent = '사용 가능한 이메일입니다.';
+            statusElement.className = 'email-status success';
+            emailDuplicateChecked = true;
+        } else if (response.status === 409) {
+            statusElement.textContent = '이미 사용 중인 이메일입니다.';
+            statusElement.className = 'email-status error';
+            emailDuplicateChecked = false;
+        } else {
+            statusElement.textContent = data.message || '이메일 확인 중 오류가 발생했습니다.';
+            statusElement.className = 'email-status error';
+            emailDuplicateChecked = false;
+        }
+    } catch (error) {
+        console.error('Email check error:', error);
+        statusElement.textContent = '서버 연결에 실패했습니다.';
+        statusElement.className = 'email-status error';
+    }
+}
+
+// 휴대폰 번호 중복 검증
+async function checkPhoneDuplicate() {
+    console.log('휴대폰 번호 중복검사 함수 호출됨');
+    const phoneNumber = document.getElementById('regPhoneNumber').value.trim();
+    const statusElement = document.getElementById('phoneStatus');
+    
+    if (!phoneNumber) {
+        statusElement.textContent = '휴대폰 번호는 필수입니다.';
+        statusElement.className = 'phone-status error';
+        return;
+    }
+    
+    // 휴대폰 번호 형식 검증
+    const phonePattern = /^010-\d{4}-\d{4}$/;
+    if (!phonePattern.test(phoneNumber)) {
+        statusElement.textContent = '휴대폰 번호는 010-0000-0000 형태로 입력해주세요.';
+        statusElement.className = 'phone-status error';
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/auth/check-phone?phoneNumber=${encodeURIComponent(phoneNumber)}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            statusElement.textContent = '사용 가능한 휴대폰 번호입니다.';
+            statusElement.className = 'phone-status success';
+            phoneDuplicateChecked = true;
+        } else if (response.status === 409) {
+            statusElement.textContent = '이미 사용 중인 휴대폰 번호입니다.';
+            statusElement.className = 'phone-status error';
+            phoneDuplicateChecked = false;
+        } else {
+            statusElement.textContent = data.message || '휴대폰 번호 확인 중 오류가 발생했습니다.';
+            statusElement.className = 'phone-status error';
+            phoneDuplicateChecked = false;
+        }
+    } catch (error) {
+        console.error('Phone check error:', error);
+        statusElement.textContent = '서버 연결에 실패했습니다.';
+        statusElement.className = 'phone-status error';
+    }
+}
+
+// 이메일 유효성 검사
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+// 비밀번호 유효성 검사
+function isValidPassword(password) {
+    // 6자 이상 (기본), 8자 이상인 경우 영문+숫자 조합
+    if (password.length < 6) {
+        return false;
+    }
+    if (password.length >= 8) {
+        const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+        return passwordRegex.test(password);
+    }
+    return true; // 6-7자리는 기본 규칙만 만족하면 OK
+}
+
+// 비밀번호 검증
+function validatePassword() {
+    const password = document.getElementById('regPassword').value;
+    const statusElement = document.getElementById('passwordStatus');
+    
+    if (!password) {
+        statusElement.textContent = '';
+        statusElement.className = 'password-status';
+        return;
+    }
+    
+    if (isValidPassword(password)) {
+        statusElement.textContent = '사용 가능한 비밀번호입니다.';
+        statusElement.className = 'password-status success';
+    } else {
+        if (password.length < 6) {
+            statusElement.textContent = '비밀번호는 6자 이상이어야 합니다.';
+        } else if (password.length >= 8) {
+            statusElement.textContent = '8자 이상인 경우 영문+숫자 조합으로 입력해주세요.';
+        } else {
+            statusElement.textContent = '사용 가능한 비밀번호입니다.';
+        }
+        statusElement.className = 'password-status error';
+    }
+    
+    // 비밀번호 확인도 다시 검증
+    validateConfirmPassword();
+}
+
+// 휴대폰 번호 형식 검증
+function validatePhoneFormat() {
+    const phoneNumber = document.getElementById('regPhoneNumber').value;
+    const statusElement = document.getElementById('phoneStatus');
+    
+    if (!phoneNumber) {
+        statusElement.textContent = '';
+        statusElement.className = 'phone-status';
+        return;
+    }
+    
+    const phonePattern = /^010-\d{4}-\d{4}$/;
+    if (phonePattern.test(phoneNumber)) {
+        statusElement.textContent = '';
+        statusElement.className = 'phone-status';
+    } else {
+        statusElement.textContent = '휴대폰 번호는 010-0000-0000 형태로 입력해주세요.';
+        statusElement.className = 'phone-status error';
+    }
+}
+
+// 이메일 형식 검증
+function validateEmailFormat() {
+    const email = document.getElementById('regEmail').value;
+    const statusElement = document.getElementById('emailStatus');
+    
+    if (!email) {
+        statusElement.textContent = '';
+        statusElement.className = 'email-status';
+        return;
+    }
+    
+    if (isValidEmail(email)) {
+        statusElement.textContent = '';
+        statusElement.className = 'email-status';
+    } else {
+        statusElement.textContent = '올바른 이메일 형식이 아닙니다. (@ 포함)';
+        statusElement.className = 'email-status error';
+    }
+}
+
+// 비밀번호 확인 검증
+function validateConfirmPassword() {
+    const password = document.getElementById('regPassword').value;
+    const confirmPassword = document.getElementById('regConfirmPassword').value;
+    const statusElement = document.getElementById('confirmPasswordStatus');
+    
+    if (!confirmPassword) {
+        statusElement.textContent = '';
+        statusElement.className = 'confirm-password-status';
+        return;
+    }
+    
+    if (password === confirmPassword) {
+        statusElement.textContent = '비밀번호가 일치합니다.';
+        statusElement.className = 'confirm-password-status success';
+    } else {
+        statusElement.textContent = '비밀번호가 다릅니다.';
+        statusElement.className = 'confirm-password-status error';
     }
 }
 
