@@ -42,6 +42,15 @@ public enum ErrorCode {
     PAYMENT_CANNOT_BE_REFUNDED("P008", "환불할 수 없는 결제입니다."),
     INVALID_REFUND_AMOUNT("P009", "유효하지 않은 환불 금액입니다."),
     
+    // PIN 인증 관련 오류
+    PIN_NOT_SET("PIN001", "PIN이 설정되지 않았습니다."),
+    PIN_ALREADY_SET("PIN002", "이미 PIN이 설정되어 있습니다."),
+    INVALID_PIN("PIN003", "PIN이 일치하지 않습니다."),
+    PIN_LOCKED("PIN004", "PIN이 잠금되었습니다."),
+    INVALID_PIN_FORMAT("PIN005", "PIN은 6자리 숫자여야 합니다."),
+    INVALID_PIN_SESSION("PIN006", "PIN 인증 세션이 유효하지 않습니다."),
+    PIN_SESSION_EXPIRED("PIN007", "PIN 인증 세션이 만료되었습니다."),
+    
     // 시스템 오류
     INTERNAL_SERVER_ERROR("S001", "내부 서버 오류가 발생했습니다."),
     DATABASE_ERROR("S002", "데이터베이스 오류가 발생했습니다."),

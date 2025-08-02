@@ -81,4 +81,80 @@ public class JwtService {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
+
+    /**
+     * PIN 인증 후 발급되는 임시 세션 토큰 생성
+     * @param userId 사용자 ID
+     * @param purpose PIN 사용 목적 (transfer, payment, common)
+     * @param expirationMinutes 만료 시간 (분)
+     * @return PIN 세션 토큰
+     */
+    public String generatePinSessionToken(Long userId, String purpose, int expirationMinutes) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId);
+        claims.put("purpose", purpose);
+        claims.put("type", "PIN_SESSION");
+        
+        long expiration = expirationMinutes * 60 * 1000L; // 분을 밀리초로 변환
+        
+        return generateToken(claims, "PIN_SESSION_" + userId, expiration);
+    }
+
+    /**
+     * PIN 세션 토큰 검증
+     * @param token PIN 세션 토큰
+     * @param expectedPurpose 예상되는 목적
+     * @return 검증 결과
+     */
+    public boolean validatePinSessionToken(String token, String expectedPurpose) {
+        try {
+            Claims claims = extractAllClaims(token);
+            
+            // 토큰 타입 확인
+            String tokenType = claims.get("type", String.class);
+            if (!"PIN_SESSION".equals(tokenType)) {
+                log.warn("잘못된 토큰 타입: {}", tokenType);
+                return false;
+            }
+            
+            // 목적 확인
+            String tokenPurpose = claims.get("purpose", String.class);
+            if (!expectedPurpose.equals(tokenPurpose)) {
+                log.warn("토큰 목적 불일치: expected={}, actual={}", expectedPurpose, tokenPurpose);
+                return false;
+            }
+            
+            // 만료 시간 확인
+            if (isTokenExpired(token)) {
+                log.warn("PIN 세션 토큰 만료");
+                return false;
+            }
+            
+            return true;
+            
+        } catch (Exception e) {
+            log.error("PIN 세션 토큰 검증 실패", e);
+            return false;
+        }
+    }
+
+    /**
+     * PIN 세션 토큰에서 사용자 ID 추출
+     * @param token PIN 세션 토큰
+     * @return 사용자 ID
+     */
+    public Long extractUserIdFromPinSession(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.get("userId", Long.class);
+    }
+
+    /**
+     * PIN 세션 토큰에서 목적 추출
+     * @param token PIN 세션 토큰
+     * @return 목적
+     */
+    public String extractPurposeFromPinSession(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.get("purpose", String.class);
+    }
 } 
