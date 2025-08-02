@@ -76,8 +76,14 @@ class AuthServiceSimpleTest {
     void findUserSuccessTest() {
         // Given
         String phoneNumber = "010-1234-5678";
-        User user = new User(1L, phoneNumber, "encodedPassword", "홍길동", 
-                           LocalDateTime.now(), "VA12345678", 0, false, null, null);
+        User user = User.builder()
+                .id(1L)
+                .phoneNumber(phoneNumber)
+                .email("hong@example.com")
+                .password("encodedPassword")
+                .name("홍길동")
+                .accountNumber("VA12345678")
+                .build();
 
         given(userRepository.findByPhoneNumber(phoneNumber))
             .willReturn(Optional.of(user));

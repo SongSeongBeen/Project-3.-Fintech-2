@@ -69,8 +69,14 @@ class AuthServiceSpringTest {
     void lightweightFindUserTest() {
         // Given
         String phoneNumber = "010-1234-5678";
-        User user = new User(1L, phoneNumber, "encodedPassword", "홍길동", 
-                           LocalDateTime.now(), "VA12345678", 0, false, null, null);
+                User user = User.builder()
+                .id(1L)
+                .phoneNumber(phoneNumber)
+                .email("hong@example.com")
+                .password("encodedPassword")
+                .name("홍길동")
+                .accountNumber("VA12345678")
+                .build();
 
         given(userRepository.findByPhoneNumber(phoneNumber))
             .willReturn(Optional.of(user));
@@ -133,8 +139,14 @@ class AuthServiceSpringTest {
         String encodedPassword = "encodedNewPassword123";
         String jwtToken = "new.jwt.token";
         
-        User newUser = new User(2L, phoneNumber, encodedPassword, "신규사용자", 
-                              LocalDateTime.now(), "VA55555555", 0, false, null, null);
+        User newUser = User.builder()
+                .id(2L)
+                .phoneNumber(phoneNumber)
+                .email("new@example.com")
+                .password(encodedPassword)
+                .name("신규사용자")
+                .accountNumber("VA55555555")
+                .build();
 
         // Mock 설정
         given(userRepository.findByPhoneNumber(phoneNumber))

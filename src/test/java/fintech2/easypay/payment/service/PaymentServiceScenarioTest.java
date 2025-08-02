@@ -33,44 +33,35 @@ class PaymentServiceScenarioTest {
     @BeforeEach
     void setUp() {
         // Given: 가상 고객 데이터 생성
-        customer1 = new User(
-            1L,
-            "010-1111-1111",
-            "encodedPassword1",
-            "카페고객",
-            LocalDateTime.now().minusDays(100),
-            "VA1111111111",
-            0,
-            false,
-            null,
-            null
-        );
+        customer1 = User.builder()
+                .id(1L)
+                .phoneNumber("010-1111-1111")
+                .email("cafe@example.com")
+                .password("encodedPassword1")
+                .name("카페고객")
+                .createdAt(LocalDateTime.now().minusDays(100))
+                .accountNumber("VA1111111111")
+                .build();
 
-        customer2 = new User(
-            2L,
-            "010-2222-2222",
-            "encodedPassword2",
-            "VIP고객",
-            LocalDateTime.now().minusDays(365),
-            "VA2222222222",
-            0,
-            false,
-            null,
-            null
-        );
+        customer2 = User.builder()
+                .id(2L)
+                .phoneNumber("010-2222-2222")
+                .email("vip@example.com")
+                .password("encodedPassword2")
+                .name("VIP고객")
+                .createdAt(LocalDateTime.now().minusDays(365))
+                .accountNumber("VA2222222222")
+                .build();
 
-        customer3 = new User(
-            3L,
-            "010-3333-3333",
-            "encodedPassword3",
-            "신규고객",
-            LocalDateTime.now().minusDays(1),
-            "VA3333333333",
-            0,
-            false,
-            null,
-            null
-        );
+        customer3 = User.builder()
+                .id(3L)
+                .phoneNumber("010-3333-3333")
+                .email("new@example.com")
+                .password("encodedPassword3")
+                .name("신규고객")
+                .createdAt(LocalDateTime.now().minusDays(1))
+                .accountNumber("VA3333333333")
+                .build();
 
         // Given: 다양한 결제 시나리오 데이터 생성
         coffeePayment = Payment.builder()

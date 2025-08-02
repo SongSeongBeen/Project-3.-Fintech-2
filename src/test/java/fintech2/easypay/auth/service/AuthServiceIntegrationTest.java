@@ -60,57 +60,49 @@ class AuthServiceIntegrationTest {
         );
 
         // Given: 가상 사용자 데이터 생성
-        testUser1 = new User(
-            1L,
-            "010-1234-5678",
-            "encodedPassword123",
-            "김철수",
-            LocalDateTime.now().minusDays(30),
-            "VA1234567890",
-            0,
-            false,
-            null,
-            null
-        );
+        testUser1 = User.builder()
+                .id(1L)
+                .phoneNumber("010-1234-5678")
+                .email("kim@example.com")
+                .password("encodedPassword123")
+                .name("김철수")
+                .createdAt(LocalDateTime.now().minusDays(30))
+                .accountNumber("VA1234567890")
+                .build();
 
-        testUser2 = new User(
-            2L,
-            "010-9876-5432",
-            "encodedPassword456",
-            "이영희",
-            LocalDateTime.now().minusDays(15),
-            "VA0987654321",
-            0,
-            false,
-            null,
-            null
-        );
+        testUser2 = User.builder()
+                .id(2L)
+                .phoneNumber("010-9876-5432")
+                .email("lee@example.com")
+                .password("encodedPassword456")
+                .name("이영희")
+                .createdAt(LocalDateTime.now().minusDays(15))
+                .accountNumber("VA0987654321")
+                .build();
 
-        testUser3 = new User(
-            3L,
-            "010-5555-1111",
-            "encodedPassword789",
-            "박민수",
-            LocalDateTime.now().minusDays(7),
-            "VA5555111122",
-            0,
-            false,
-            null,
-            null
-        );
+        testUser3 = User.builder()
+                .id(3L)
+                .phoneNumber("010-5555-1111")
+                .email("park@example.com")
+                .password("encodedPassword789")
+                .name("박민수")
+                .createdAt(LocalDateTime.now().minusDays(7))
+                .accountNumber("VA5555111122")
+                .build();
 
-        lockedUser = new User(
-            4L,
-            "010-1111-2222",
-            "encodedPasswordLocked",
-            "잠금계정",
-            LocalDateTime.now().minusDays(1),
-            "VA1111222233",
-            5,
-            true,
-            LocalDateTime.now().plusMinutes(30),
-            "로그인 5회 실패로 인한 계정 잠금"
-        );
+        lockedUser = User.builder()
+                .id(4L)
+                .phoneNumber("010-1111-2222")
+                .email("locked@example.com")
+                .password("encodedPasswordLocked")
+                .name("잠금계정")
+                .createdAt(LocalDateTime.now().minusDays(1))
+                .accountNumber("VA1111222233")
+                .loginFailCount(5)
+                .isLocked(true)
+                .lockExpiresAt(LocalDateTime.now().plusMinutes(30))
+                .lockReason("로그인 5회 실패로 인한 계정 잠금")
+                .build();
     }
 
     @Test
@@ -217,18 +209,14 @@ class AuthServiceIntegrationTest {
     @DisplayName("실제 사용 사례 - 로그인 실패 후 계정 잠금 시나리오")
     void loginFailureAndLockScenarioTest() {
         // Given: 정상 사용자가 로그인을 5번 실패하는 시나리오
-        User normalUser = new User(
-            5L,
-            "010-7777-8888",
-            "encodedPassword",
-            "테스트유저",
-            LocalDateTime.now(),
-            "VA7777888899",
-            0,
-            false,
-            null,
-            null
-        );
+        User normalUser = User.builder()
+                .id(5L)
+                .phoneNumber("010-7777-8888")
+                .email("test@example.com")
+                .password("encodedPassword")
+                .name("테스트유저")
+                .accountNumber("VA7777888899")
+                .build();
 
         // When: 로그인 실패를 5번 반복
         for (int i = 0; i < 5; i++) {
@@ -246,18 +234,18 @@ class AuthServiceIntegrationTest {
     @DisplayName("계정 복구 시나리오 - 잠긴 계정 해제 테스트")
     void accountRecoveryScenarioTest() {
         // Given: 잠긴 계정을 복구하는 시나리오
-        User userToRecover = new User(
-            6L,
-            "010-9999-0000",
-            "encodedPassword",
-            "복구유저",
-            LocalDateTime.now(),
-            "VA9999000011",
-            5,
-            true,
-            LocalDateTime.now().plusMinutes(30),
-            "로그인 5회 실패로 인한 계정 잠금"
-        );
+        User userToRecover = User.builder()
+                .id(6L)
+                .phoneNumber("010-9999-0000")
+                .email("recover@example.com")
+                .password("encodedPassword")
+                .name("복구유저")
+                .accountNumber("VA9999000011")
+                .loginFailCount(5)
+                .isLocked(true)
+                .lockExpiresAt(LocalDateTime.now().plusMinutes(30))
+                .lockReason("로그인 5회 실패로 인한 계정 잠금")
+                .build();
 
         // When: 계정 복구 실행
         userToRecover.resetLoginFailCount();
