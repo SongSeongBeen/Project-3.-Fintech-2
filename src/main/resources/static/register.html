@@ -4,119 +4,7 @@
     <meta charset="UTF-8">
     <title>EasyPay - 회원가입</title>
     <link rel="stylesheet" href="/css/common.css">
-    <style>
-        .email-input-group {
-            display: flex;
-            gap: 10px;
-            align-items: flex-start;
-        }
-        
-        .email-input-group input {
-            flex: 1;
-        }
-        
-        .email-input-group .btn-small {
-            padding: 8px 12px;
-            font-size: 12px;
-            white-space: nowrap;
-            background: #4f8cff;
-            color: white;
-            border: 1px solid #4f8cff;
-            border-radius: 4px;
-        }
-        
-        .email-input-group .btn-small:hover {
-            background: #3a7bd5;
-        }
-        
-        .email-status {
-            margin-top: 5px;
-            font-size: 12px;
-            min-height: 16px;
-        }
-        
-        .email-status.success {
-            color: #28a745;
-        }
-        
-        .email-status.error {
-            color: #dc3545;
-        }
-        
-        .email-status.warning {
-            color: #ffc107;
-        }
-        
-        .phone-input-group {
-            display: flex;
-            gap: 10px;
-            align-items: flex-start;
-        }
-        
-        .phone-input-group input {
-            flex: 1;
-        }
-        
-        .phone-input-group .btn-small {
-            padding: 8px 12px;
-            font-size: 12px;
-            white-space: nowrap;
-            background: #4f8cff;
-            color: white;
-            border: 1px solid #4f8cff;
-            border-radius: 4px;
-        }
-        
-        .phone-input-group .btn-small:hover {
-            background: #3a7bd5;
-        }
-        
-        .phone-status {
-            margin-top: 5px;
-            font-size: 12px;
-            min-height: 16px;
-        }
-        
-        .phone-status.success {
-            color: #28a745;
-        }
-        
-        .phone-status.error {
-            color: #dc3545;
-        }
-        
-        .phone-status.warning {
-            color: #ffc107;
-        }
-        
-        .password-status {
-            margin-top: 5px;
-            font-size: 12px;
-            min-height: 16px;
-        }
-        
-        .password-status.success {
-            color: #28a745;
-        }
-        
-        .password-status.error {
-            color: #dc3545;
-        }
-        
-        .confirm-password-status {
-            margin-top: 5px;
-            font-size: 12px;
-            min-height: 16px;
-        }
-        
-        .confirm-password-status.success {
-            color: #28a745;
-        }
-        
-        .confirm-password-status.error {
-            color: #dc3545;
-        }
-    </style>
+    <script defer src="/js/common.js"></script>
     <script defer src="/js/auth.js"></script>
 </head>
 <body>
@@ -130,30 +18,12 @@
             <h2>회원가입</h2>
             <form id="registerForm">
                 <div class="form-group">
-                    <label for="regPhoneNumber">휴대폰 번호 *</label>
-                    <div class="phone-input-group">
-                        <input type="tel" id="regPhoneNumber" placeholder="010-1234-5678" maxlength="13" required>
-                        <button type="button" class="btn btn-small" onclick="checkPhoneDuplicate()">중복확인</button>
-                    </div>
-                    <div class="phone-status" id="phoneStatus"></div>
-                </div>
-                        <div class="form-group">
-            <label for="regEmail">이메일 *</label>
-            <div class="email-input-group">
-                <input type="email" id="regEmail" placeholder="example@email.com" required>
-                <button type="button" class="btn btn-small" onclick="checkEmailDuplicate()">중복확인</button>
-            </div>
-            <div class="email-status" id="emailStatus"></div>
-        </div>
-                <div class="form-group">
-                    <label for="regPassword">비밀번호 *</label>
-                    <input type="password" id="regPassword" placeholder="8자 이상, 영문+숫자 조합" required>
-                    <div class="password-status" id="passwordStatus"></div>
+                    <label for="regPhoneNumber">휴대폰 번호</label>
+                    <input type="tel" id="regPhoneNumber" placeholder="010-1234-5678" maxlength="13" required>
                 </div>
                 <div class="form-group">
-                    <label for="regConfirmPassword">비밀번호 확인 *</label>
-                    <input type="password" id="regConfirmPassword" placeholder="비밀번호를 다시 입력하세요" required>
-                    <div class="confirm-password-status" id="confirmPasswordStatus"></div>
+                    <label for="regPassword">비밀번호 (6자 이상)</label>
+                    <input type="password" id="regPassword" required>
                 </div>
                 <div class="form-group">
                     <label for="regName">이름</label>

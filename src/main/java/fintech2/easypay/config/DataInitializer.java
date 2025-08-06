@@ -29,25 +29,25 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         log.info("애플리케이션 초기 데이터 생성 시작...");
         
-        // 테스트 사용자1이 이미 존재하는지 확인
+        // 테스트 사용자1이 이미 존재하는지 확인 (하이픈 제거된 형태로 검색)
         if (userRepository.findByPhoneNumber("01012345678").isEmpty()) {
             createTestUser1();
         } else {
             log.info("테스트 사용자1이 이미 존재합니다.");
         }
         
-        // 테스트 사용자2가 이미 존재하는지 확인
+        // 테스트 사용자2가 이미 존재하는지 확인 (하이픈 제거된 형태로 검색)
         if (userRepository.findByPhoneNumber("01098765432").isEmpty()) {
             createTestUser2();
         } else {
             log.info("테스트 사용자2가 이미 존재합니다.");
         }
         
-        // 테스트 사용자3 (PIN 없음) - 신규 가입 테스트용
+        // 임시 테스트 사용자 추가 (PIN 미설정)
         if (userRepository.findByPhoneNumber("01012341234").isEmpty()) {
-            createTestUser3();
+            createTempTestUser();
         } else {
-            log.info("테스트 사용자3이 이미 존재합니다.");
+            log.info("임시 테스트 사용자가 이미 존재합니다.");
         }
         
         log.info("애플리케이션 초기 데이터 생성 완료!");
@@ -57,12 +57,12 @@ public class DataInitializer implements CommandLineRunner {
         try {
             log.info("테스트 사용자1 생성 중...");
             
-            // 사용자 생성
+            // 사용자 생성 (하이픈 제거된 전화번호로 저장)
             User user1 = User.builder()
-                    .phoneNumber("01012345678")
+                    .phoneNumber("01012345678") // 하이픈 제거
+                    .email("test1@example.com")
                     .password(passwordEncoder.encode("123456"))
                     .name("테스트사용자1")
-                    .email("test1@example.com")
                     .createdAt(LocalDateTime.now())
                     .transferPin(passwordEncoder.encode("123456")) // 테스트용 기본 PIN
                     .pinCreatedAt(LocalDateTime.now())
@@ -104,12 +104,12 @@ public class DataInitializer implements CommandLineRunner {
         try {
             log.info("테스트 사용자2 생성 중...");
             
-            // 사용자 생성
+            // 사용자 생성 (하이픈 제거된 전화번호로 저장)
             User user2 = User.builder()
-                    .phoneNumber("01098765432")
+                    .phoneNumber("01098765432") // 하이픈 제거
+                    .email("test2@example.com")
                     .password(passwordEncoder.encode("123456"))
                     .name("테스트사용자2")
-                    .email("test2@example.com")
                     .createdAt(LocalDateTime.now())
                     .transferPin(passwordEncoder.encode("123456")) // 테스트용 기본 PIN
                     .pinCreatedAt(LocalDateTime.now())
@@ -146,51 +146,51 @@ public class DataInitializer implements CommandLineRunner {
             log.error("테스트 사용자2 생성 실패: {}", e.getMessage(), e);
         }
     }
-
-    private void createTestUser3() {
+    
+    private void createTempTestUser() {
         try {
-            log.info("테스트 사용자3 생성 중... (PIN 없음)");
+            log.info("임시 테스트 사용자 생성 중...");
             
-            // 사용자 생성 (PIN 없음)
-            User user3 = User.builder()
-                    .phoneNumber("01012341234")
+            // 사용자 생성 (하이픈 제거된 전화번호로 저장, PIN 미설정)
+            User tempUser = User.builder()
+                    .phoneNumber("01012341234") // 하이픈 제거
+                    .email("temp@example.com")
                     .password(passwordEncoder.encode("test1234"))
-                    .name("테스트사용자3")
-                    .email("test3@example.com")
+                    .name("임시테스트사용자")
                     .createdAt(LocalDateTime.now())
-                    .transferPin(null) // PIN 없음
-                    .pinCreatedAt(null) // PIN 생성일 없음
+                    .transferPin(null) // PIN 미설정
+                    .pinCreatedAt(null) // PIN 생성일 미설정
                     .build();
-            user3 = userRepository.save(user3);
+            tempUser = userRepository.save(tempUser);
             
             // 계좌번호 생성 (EasyPay 가상계좌)
-            String accountNumber3 = "EP" + String.format("%010d", user3.getId());
+            String accountNumber = "EP" + String.format("%010d", tempUser.getId());
             
             // Account 엔티티 생성
-            Account account3 = Account.builder()
-                    .accountNumber(accountNumber3)
-                    .userId(user3.getId())
-                    .balance(new BigDecimal("200000")) // 초기 잔액 20만원
+            Account account = Account.builder()
+                    .accountNumber(accountNumber)
+                    .userId(tempUser.getId())
+                    .balance(new BigDecimal("100000")) // 초기 잔액 10만원
                     .createdAt(LocalDateTime.now())
                     .build();
-            accountRepository.save(account3);
+            accountRepository.save(account);
             
             // AccountBalance 엔티티 생성 (BalanceService에서 사용)
-            AccountBalance accountBalance3 = AccountBalance.builder()
-                    .accountNumber(accountNumber3)
-                    .balance(new BigDecimal("200000"))
+            AccountBalance accountBalance = AccountBalance.builder()
+                    .accountNumber(accountNumber)
+                    .balance(new BigDecimal("100000"))
                     .build();
-            accountBalanceRepository.save(accountBalance3);
+            accountBalanceRepository.save(accountBalance);
             
             // User 엔티티에 계좌번호 설정
-            user3.setAccountNumber(accountNumber3);
-            userRepository.save(user3);
+            tempUser.setAccountNumber(accountNumber);
+            userRepository.save(tempUser);
             
-            log.info("테스트 사용자3 생성 완료: 전화번호={}, 계좌번호={}, 초기잔액=200,000원 (PIN 없음)", 
-                    user3.getPhoneNumber(), accountNumber3);
+            log.info("임시 테스트 사용자 생성 완료: 전화번호={}, 계좌번호={}, 초기잔액=100,000원, PIN=미설정", 
+                    tempUser.getPhoneNumber(), accountNumber);
                     
         } catch (Exception e) {
-            log.error("테스트 사용자3 생성 실패: {}", e.getMessage(), e);
+            log.error("임시 테스트 사용자 생성 실패: {}", e.getMessage(), e);
         }
     }
 }

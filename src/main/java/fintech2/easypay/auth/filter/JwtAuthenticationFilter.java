@@ -51,6 +51,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // 휴대폰 번호가 있고, 현재 인증된 사용자가 없으면
             if (phoneNumber != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 
+                // 토큰 만료 여부 먼저 확인
+                if (jwtService.isTokenExpired(jwt)) {
+                    logger.warn("Expired JWT token for user: " + phoneNumber);
+                    // 만료된 토큰에 대해서는 401 응답
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\":\"TOKEN_EXPIRED\",\"message\":\"토큰이 만료되었습니다.\"}");
+                    return;
+                }
+                
                 // 사용자 정보 조회
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(phoneNumber);
                 
@@ -66,8 +76,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            // JWT 토큰이 유효하지 않으면 로그만 남기고 계속 진행
+            // JWT 토큰이 유효하지 않으면 401 응답
             logger.warn("Invalid JWT token: " + e.getMessage());
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\":\"INVALID_TOKEN\",\"message\":\"유효하지 않은 토큰입니다.\"}");
+            return;
         }
         
         filterChain.doFilter(request, response);
