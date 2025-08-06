@@ -47,6 +47,9 @@ class AuthServiceSimpleTest {
     private JwtService jwtService;
     
     @Mock
+    private TokenService tokenService;
+    
+    @Mock
     private LoginHistoryService loginHistoryService;
     
     @Mock
@@ -65,6 +68,7 @@ class AuthServiceSimpleTest {
             accountBalanceRepository,
             passwordEncoder,
             jwtService,
+            tokenService,
             loginHistoryService,
             auditLogService,
             alarmService

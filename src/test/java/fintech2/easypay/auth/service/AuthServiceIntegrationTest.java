@@ -33,6 +33,7 @@ class AuthServiceIntegrationTest {
     @Mock private AccountBalanceRepository accountBalanceRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private JwtService jwtService;
+    @Mock private TokenService tokenService;
     @Mock private LoginHistoryService loginHistoryService;
     @Mock private AuditLogService auditLogService;
     @Mock private AlarmService alarmService;
@@ -54,6 +55,7 @@ class AuthServiceIntegrationTest {
             accountBalanceRepository,
             passwordEncoder,
             jwtService,
+            tokenService,
             loginHistoryService,
             auditLogService,
             alarmService

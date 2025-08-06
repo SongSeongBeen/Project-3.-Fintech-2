@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>EasyPay - 결제하기</title>
     <link rel="stylesheet" href="/css/common.css">
+    <script defer src="/js/common.js"></script>
     <style>
         .header {
             display: flex;
@@ -354,7 +355,18 @@
         let selectedPaymentMethod = 'CARD';
 
         // 페이지 로드 시 실행
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 서버에서 클라이언트 설정 로드
+            await loadClientConfig();
+            
+            // 서버 설정을 사용한 토큰 체크 시작
+            setInterval(checkTokenExpiration, clientConfig.accessCheckInterval);
+            setInterval(backgroundTokenCheck, clientConfig.backgroundCheckInterval);
+            
+            // 초기 토큰 체크는 즉시 실행
+            checkTokenExpiration();
+            backgroundTokenCheck();
+            
             checkAuth();
             loadBalance();
             
@@ -590,6 +602,35 @@
             event.target.value = value;
         }
         
+        // 백그라운드 토큰 체크
+        async function backgroundTokenCheck() {
+            const accessToken = localStorage.getItem('accessToken');
+            const refreshToken = localStorage.getItem('refreshToken');
+            
+            if (!accessToken || !refreshToken) {
+                return;
+            }
+
+            try {
+                const payload = JSON.parse(atob(accessToken.split('.')[1]));
+                const expirationTime = payload.exp * 1000;
+                const currentTime = Date.now();
+                
+                // 만료되었거나 곧 만료될 예정이면 갱신 시도
+                if (currentTime >= expirationTime || (expirationTime - currentTime < 60000)) {
+                    console.log('🔄 결제 페이지 백그라운드 토큰 갱신 시도...');
+                    const success = await window.refreshToken(); // common.js의 함수 사용
+                    if (!success) {
+                        console.log('❌ 백그라운드 토큰 갱신 실패, 로그아웃');
+                        showAutoLogoutPopup();
+                    }
+                }
+            } catch (error) {
+                console.error('백그라운드 토큰 체크 오류:', error);
+                showAutoLogoutPopup();
+            }
+        }
+
         // 금액 유효성 검사
         function validateAmount() {
             const input = document.getElementById('amount');
