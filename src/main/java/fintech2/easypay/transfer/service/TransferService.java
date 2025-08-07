@@ -31,6 +31,7 @@ import fintech2.easypay.transfer.external.BankingApiResponse;
 import fintech2.easypay.transfer.external.BankingApiService;
 import fintech2.easypay.transfer.external.BankingApiStatus;
 import fintech2.easypay.transfer.repository.TransferRepository;
+import org.springframework.context.ApplicationContext;
 
 /**
  * 송금 서비스
@@ -50,6 +51,7 @@ public class TransferService {
     private final AuditLogService auditLogService;
     private final NotificationService notificationService;
     private final BankingApiService bankingApiService;
+    private final ApplicationContext applicationContext;
     
     /**
      * 사용자 간 송금 처리
@@ -92,12 +94,15 @@ public class TransferService {
                 throw new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND, "본인 계좌가 아닙니다.");
             }
         } else {
-            // 주계좌 사용 (기존 로직)
-            List<Account> senderAccounts = accountRepository.findAllByUserId(sender.getId());
-            senderAccount = senderAccounts.stream()
-                    .filter(acc -> acc.getAccountNumber().matches("EP\\d{10}"))
-                    .findFirst()
-                    .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
+            // UserAccount에서 기본 계좌 사용 (수정된 로직)
+            fintech2.easypay.account.service.UserAccountService userAccountService = 
+                applicationContext.getBean(fintech2.easypay.account.service.UserAccountService.class);
+            fintech2.easypay.account.entity.UserAccount primaryUserAccount = userAccountService.getPrimaryAccount(sender.getId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND, "기본 계좌를 찾을 수 없습니다."));
+            
+            // UserAccount의 계좌번호로 Account 엔티티 조회
+            senderAccount = accountRepository.findByAccountNumber(primaryUserAccount.getAccountNumber())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND, "기본 계좌에 해당하는 Account를 찾을 수 없습니다."));
         }
         
         // 데드락 방지를 위한 순서대로 락 획득

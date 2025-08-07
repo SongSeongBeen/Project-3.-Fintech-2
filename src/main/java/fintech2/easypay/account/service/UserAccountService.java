@@ -2,7 +2,11 @@ package fintech2.easypay.account.service;
 
 import fintech2.easypay.account.entity.UserAccount;
 import fintech2.easypay.account.repository.UserAccountRepository;
+import fintech2.easypay.account.entity.TransactionHistory;
+import fintech2.easypay.account.repository.TransactionHistoryRepository;
 import fintech2.easypay.common.enums.AccountStatus;
+import fintech2.easypay.common.enums.TransactionStatus;
+import fintech2.easypay.common.enums.TransactionType;
 import fintech2.easypay.common.exception.AccountNotFoundException;
 import fintech2.easypay.audit.service.AuditLogService;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +29,7 @@ import java.util.UUID;
 public class UserAccountService {
     
     private final UserAccountRepository userAccountRepository;
+    private final TransactionHistoryRepository transactionHistoryRepository;
     private final AuditLogService auditLogService;
     
     private static final int MAX_ACCOUNTS_PER_USER = 5; // 사용자당 최대 계좌 수
@@ -215,6 +220,16 @@ public class UserAccountService {
         
         UserAccount updatedAccount = userAccountRepository.save(primaryAccount);
         
+        // 거래 내역 저장
+        createTransactionHistory(
+                updatedAccount.getAccountNumber(), 
+                amount, 
+                TransactionType.DEPOSIT, 
+                memo != null ? memo : "입금", 
+                userId.toString(),
+                newBalance
+        );
+        
         log.info("기본 계좌 입금 완료: accountNumber={}, {} -> {}", 
                  primaryAccount.getAccountNumber(), oldBalance, newBalance);
         
@@ -250,6 +265,16 @@ public class UserAccountService {
         primaryAccount.setUpdatedAt(LocalDateTime.now());
         
         UserAccount updatedAccount = userAccountRepository.save(primaryAccount);
+        
+        // 거래 내역 저장
+        createTransactionHistory(
+                updatedAccount.getAccountNumber(), 
+                amount, 
+                TransactionType.WITHDRAWAL, 
+                memo != null ? memo : "출금", 
+                userId.toString(),
+                newBalance
+        );
         
         log.info("기본 계좌 출금 완료: accountNumber={}, {} -> {}", 
                  primaryAccount.getAccountNumber(), oldBalance, newBalance);
@@ -382,6 +407,41 @@ public class UserAccountService {
                         .map(UserAccount::getAccountNumber)
                         .orElse(null))
                 .build();
+    }
+    
+    /**
+     * 거래 내역 생성
+     */
+    private void createTransactionHistory(String accountNumber, BigDecimal amount, 
+                                        TransactionType transactionType, String description, 
+                                        String userId, BigDecimal balanceAfter) {
+        try {
+            TransactionHistory transaction = TransactionHistory.builder()
+                    .accountNumber(accountNumber)
+                    .amount(amount)
+                    .transactionType(transactionType)
+                    .description(description)
+                    .balanceAfter(balanceAfter)
+                    .status(TransactionStatus.COMPLETED)
+                    .transactionId(generateTransactionId())
+                    .createdBy(userId)
+                    .build();
+            
+            transactionHistoryRepository.save(transaction);
+            log.debug("거래 내역 저장 완료: accountNumber={}, type={}, amount={}", 
+                     accountNumber, transactionType, amount);
+        } catch (Exception e) {
+            log.error("거래 내역 저장 실패: accountNumber={}, type={}, amount={}", 
+                     accountNumber, transactionType, amount, e);
+            // 거래 내역 저장 실패가 메인 로직에 영향을 주지 않도록 예외를 삼킨다
+        }
+    }
+    
+    /**
+     * 거래 ID 생성
+     */
+    private String generateTransactionId() {
+        return "USR" + UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
     }
     
     /**

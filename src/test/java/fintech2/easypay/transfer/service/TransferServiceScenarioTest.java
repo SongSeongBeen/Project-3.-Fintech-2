@@ -16,6 +16,7 @@ import fintech2.easypay.transfer.external.BankingApiResponse;
 import fintech2.easypay.transfer.external.BankingApiService;
 import fintech2.easypay.transfer.external.BankingApiStatus;
 import fintech2.easypay.transfer.repository.TransferRepository;
+import org.springframework.context.ApplicationContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,6 +44,7 @@ class TransferServiceScenarioTest {
     @Mock private NotificationService notificationService;
     @Mock private BankingApiService bankingApiService;
     @Mock private BalanceService balanceService;
+    @Mock private ApplicationContext applicationContext;
 
     private TransferService transferService;
 
@@ -68,7 +70,8 @@ class TransferServiceScenarioTest {
             balanceService,
             auditLogService,
             notificationService,
-            bankingApiService
+            bankingApiService,
+            applicationContext
         );
 
         // Given: 가상 사용자 데이터 생성

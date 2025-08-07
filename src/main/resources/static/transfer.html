@@ -1026,14 +1026,11 @@
                 <!-- 송금 계좌 정보 표시 -->
                 <div class="sender-info-brief">
                     <div class="account-info-header">
-                        내계좌 정보
+                        내계좌 정보 <span id="senderAccountName">(내 계좌)</span>
                     </div>
                     <div class="account-details">
                         <div class="account-main-info">
                             <span id="senderAccountNumber">-</span> (<span id="senderBankName">EasyPay</span>)
-                        </div>
-                        <div class="account-sub-info">
-                            <span id="senderAccountName">내 계좌</span>
                         </div>
                         <div class="balance-info">
                             잔액: <span id="senderAccountBalance">-</span>
@@ -1986,7 +1983,7 @@
             }
 
             // 송금 계좌 정보 표시
-            document.getElementById('senderAccountName').textContent = selectedSenderAccount.accountName || 'EasyPay 계좌';
+            document.getElementById('senderAccountName').textContent = '(' + selectedSenderAccount.accountName + ')' || 'EasyPay 계좌';
             document.getElementById('senderAccountNumber').textContent = selectedSenderAccount.accountNumber;
             document.getElementById('senderBankName').textContent = 'EasyPay';
             document.getElementById('senderAccountBalance').textContent = new Intl.NumberFormat('ko-KR').format(selectedSenderAccount.balance) + '원';
