@@ -37,6 +37,9 @@ function checkAuth() {
     }
 }
 
+// 전역 변수 - 현재 기본 계좌 정보
+let currentPrimaryAccount = null;
+
 // 잔액 조회 (기본 계좌 사용)
 async function loadBalance() {
     const token = localStorage.getItem('accessToken');
@@ -65,6 +68,12 @@ async function loadBalance() {
                 const accountNumber = primaryAccount.accountNumber || 'N/A';
                 const accountName = primaryAccount.accountName || '기본계좌';
                 
+                // 전역 변수에 현재 기본 계좌 저장
+                currentPrimaryAccount = primaryAccount;
+                
+                // localStorage에도 업데이트 (거래내역 조회용)
+                localStorage.setItem('accountNumber', accountNumber);
+                
                 document.getElementById('currentBalance').textContent = 
                     `${Number(balance).toLocaleString()} 원`;
                 document.getElementById('balanceAccountNumber').textContent = 
@@ -78,6 +87,9 @@ async function loadBalance() {
                 const accountNumber = firstAccount.accountNumber || 'N/A';
                 const accountName = firstAccount.accountName || '계좌';
                 
+                currentPrimaryAccount = firstAccount;
+                localStorage.setItem('accountNumber', accountNumber);
+                
                 document.getElementById('currentBalance').textContent = 
                     `${Number(balance).toLocaleString()} 원`;
                 document.getElementById('balanceAccountNumber').textContent = 
@@ -86,6 +98,9 @@ async function loadBalance() {
                 console.log('첫 번째 계좌 잔액 조회 성공:', { balance, accountNumber, accountName });
             } else {
                 // 계좌가 없는 경우
+                currentPrimaryAccount = null;
+                localStorage.removeItem('accountNumber');
+                
                 document.getElementById('currentBalance').textContent = '0 원';
                 document.getElementById('balanceAccountNumber').textContent = '계좌를 생성해주세요';
                 
@@ -186,10 +201,23 @@ async function testWithdraw() {
     }
 }
 
-// 거래내역 조회
+// 거래내역 조회 (개선된 버전)
 async function loadTransactionHistory() {
     const token = localStorage.getItem('accessToken');
-    const accountNumber = localStorage.getItem('accountNumber'); // 실제 계좌번호 사용
+    
+    // 현재 기본 계좌 정보가 없으면 먼저 잔액 데이터 로드
+    if (!currentPrimaryAccount) {
+        await loadBalance();
+    }
+    
+    // 여전히 계좌 정보가 없으면 예리 리턴
+    if (!currentPrimaryAccount) {
+        document.getElementById('transactionList').innerHTML = 
+            '<p class="no-data">계좌 정보를 불러올 수 없습니다.</p>';
+        return;
+    }
+    
+    const accountNumber = currentPrimaryAccount.accountNumber;
 
     try {
         const response = await fetch(`/api/accounts/${accountNumber}/transactions`, {
