@@ -91,13 +91,13 @@ async function apiCall(endpoint, options = {}) {
 async function refreshAccessToken() {
     // 이미 갱신 중이면 중복 실행 방지
     if (isRefreshing) {
-        console.log('🔄 이미 토큰 갱신 중... 대기');
+        console.log('이미 토큰 갱신 중... 대기');
         return false;
     }
     
     // 로그아웃 진행 중이면 갱신 시도하지 않음
     if (logoutInProgress) {
-        console.log('🚪 로그아웃 진행 중... 갱신 시도 중단');
+        console.log('로그아웃 진행 중... 갱신 시도 중단');
         return false;
     }
     
@@ -112,7 +112,7 @@ async function refreshAccessToken() {
     try {
         console.log('Refresh Token 사용하여 Access Token 갱신 중...');
         
-        const response = await fetch('/auth/refresh', {
+        const response = await fetch('/api/auth/refresh', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

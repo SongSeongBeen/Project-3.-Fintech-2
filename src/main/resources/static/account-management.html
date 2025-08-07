@@ -473,6 +473,37 @@
         </div>
     </div>
 
+    <!-- 커스텀 알림 모달 -->
+    <div class="modal-overlay" id="customAlertModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 class="modal-title">알림</h3>
+            </div>
+            <div class="modal-body">
+                <p id="alertMessage" style="text-align: center; padding: 20px 0; line-height: 1.6;"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-confirm" onclick="closeCustomAlert()">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 커스텀 확인 모달 -->
+    <div class="modal-overlay" id="customConfirmModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 class="modal-title">확인</h3>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage" style="text-align: center; padding: 20px 0; line-height: 1.6;"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-cancel" onclick="closeCustomConfirm(false)">취소</button>
+                <button class="modal-btn modal-btn-confirm" onclick="closeCustomConfirm(true)">확인</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 새 EasyPay 계좌 생성 모달 -->
     <div class="modal-overlay" id="newAccountModal">
         <div class="modal-content">
@@ -585,11 +616,17 @@
             initializeBankGrid();
         });
 
+        // 계좌 잔액 업데이트 이벤트 리스너 추가
+        window.addEventListener('accountBalanceUpdated', function() {
+            console.log('계좌 잔액 업데이트 이벤트 수신, 계좌 목록 새로고침');
+            loadEasyPayAccounts();
+        });
+
         // 인증 확인
         function checkAuth() {
             const token = localStorage.getItem('accessToken');
             if (!token) {
-                alert('로그인이 필요합니다.');
+                customAlert('로그인이 필요합니다.');
                 window.location.href = '/login.html';
                 return;
             }
@@ -801,12 +838,12 @@
             const pin = document.getElementById('newAccountPin').value.trim();
             
             if (!accountName) {
-                alert('계좌 이름을 입력해주세요.');
+                customAlert('계좌 이름을 입력해주세요.');
                 return;
             }
             
             if (!pin || pin.length !== 6) {
-                alert('PIN 번호 6자리를 입력해주세요.');
+                customAlert('PIN 번호 6자리를 입력해주세요.');
                 return;
             }
             
@@ -828,15 +865,15 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    alert('새 EasyPay 계좌가 생성되었습니다!');
+                    customAlert('새 EasyPay 계좌가 생성되었습니다!');
                     closeNewAccountModal();
                     loadEasyPayAccounts();
                 } else {
-                    alert(result.message || '계좌 생성에 실패했습니다.');
+                    customAlert(result.message || '계좌 생성에 실패했습니다.');
                 }
             } catch (error) {
                 console.error('계좌 생성 오류:', error);
-                alert('계좌 생성 중 오류가 발생했습니다.');
+                customAlert('계좌 생성 중 오류가 발생했습니다.');
             }
         }
 
@@ -861,12 +898,12 @@
             const accountAlias = document.getElementById('externalAccountAlias').value.trim();
             
             if (!selectedBankCode || !selectedBankName) {
-                alert('은행을 선택해주세요.');
+                customAlert('은행을 선택해주세요.');
                 return;
             }
             
             if (!accountNumber) {
-                alert('계좌번호를 입력해주세요.');
+                customAlert('계좌번호를 입력해주세요.');
                 return;
             }
             
@@ -890,15 +927,15 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    alert('외부 계좌가 성공적으로 연결되었습니다!');
+                    customAlert('외부 계좌가 성공적으로 연결되었습니다!');
                     closeExternalAccountModal();
                     loadExternalAccounts();
                 } else {
-                    alert(result.message || '외부 계좌 연결에 실패했습니다.');
+                    customAlert(result.message || '외부 계좌 연결에 실패했습니다.');
                 }
             } catch (error) {
                 console.error('외부 계좌 등록 오류:', error);
-                alert('외부 계좌 연결 중 오류가 발생했습니다.');
+                customAlert('외부 계좌 연결 중 오류가 발생했습니다.');
             }
         }
 
@@ -926,7 +963,7 @@
             const accountType = document.getElementById('editAccountType').value;
             
             if (!newName) {
-                alert('새로운 이름을 입력해주세요.');
+                customAlert('새로운 이름을 입력해주세요.');
                 return;
             }
             
@@ -955,7 +992,7 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    alert('이름이 성공적으로 변경되었습니다.');
+                    customAlert('이름이 성공적으로 변경되었습니다.');
                     closeEditAccountModal();
                     
                     if (accountType === 'easypay') {
@@ -964,17 +1001,18 @@
                         loadExternalAccounts();
                     }
                 } else {
-                    alert(result.message || '이름 변경에 실패했습니다.');
+                    customAlert(result.message || '이름 변경에 실패했습니다.');
                 }
             } catch (error) {
                 console.error('계좌 이름 변경 오류:', error);
-                alert('이름 변경 중 오류가 발생했습니다.');
+                customAlert('이름 변경 중 오류가 발생했습니다.');
             }
         }
 
         // 기본 계좌 설정
         async function setPrimaryAccount(accountNumber) {
-            if (!confirm('이 계좌를 기본 계좌로 설정하시겠습니까?')) {
+            const confirmed = await customConfirm('이 계좌를 기본 계좌로 설정하시겠습니까?');
+            if (!confirmed) {
                 return;
             }
             
@@ -993,14 +1031,14 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    alert('기본 계좌가 변경되었습니다.');
+                    customAlert('기본 계좌가 변경되었습니다.');
                     loadEasyPayAccounts();
                 } else {
-                    alert(result.message || '기본 계좌 변경에 실패했습니다.');
+                    customAlert(result.message || '기본 계좌 변경에 실패했습니다.');
                 }
             } catch (error) {
                 console.error('기본 계좌 변경 오류:', error);
-                alert('기본 계좌 변경 중 오류가 발생했습니다.');
+                customAlert('기본 계좌 변경 중 오류가 발생했습니다.');
             }
         }
 
@@ -1009,11 +1047,12 @@
             const pin = prompt('계좌 비활성화를 위해 PIN 번호를 입력해주세요:');
             
             if (!pin || pin.length !== 6) {
-                alert('PIN 번호 6자리를 입력해주세요.');
+                customAlert('PIN 번호 6자리를 입력해주세요.');
                 return;
             }
             
-            if (!confirm('정말로 이 계좌를 비활성화하시겠습니까?\n비활성화된 계좌는 복구할 수 없습니다.')) {
+            const confirmed = await customConfirm('정말로 이 계좌를 비활성화하시겠습니까?\n비활성화된 계좌는 복구할 수 없습니다.');
+            if (!confirmed) {
                 return;
             }
             
@@ -1032,20 +1071,21 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    alert('계좌가 비활성화되었습니다.');
+                    customAlert('계좌가 비활성화되었습니다.');
                     loadEasyPayAccounts();
                 } else {
-                    alert(result.message || '계좌 비활성화에 실패했습니다.');
+                    customAlert(result.message || '계좌 비활성화에 실패했습니다.');
                 }
             } catch (error) {
                 console.error('계좌 비활성화 오류:', error);
-                alert('계좌 비활성화 중 오류가 발생했습니다.');
+                customAlert('계좌 비활성화 중 오류가 발생했습니다.');
             }
         }
 
         // 외부 계좌 재인증
         async function reVerifyAccount(accountId) {
-            if (!confirm('이 계좌를 재인증하시겠습니까?')) {
+            const confirmed = await customConfirm('이 계좌를 재인증하시겠습니까?');
+            if (!confirmed) {
                 return;
             }
             
@@ -1062,21 +1102,22 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    alert('계좌 재인증이 완료되었습니다.');
+                    customAlert('계좌 재인증이 완료되었습니다.');
                 } else {
-                    alert('계좌 재인증에 실패했습니다: ' + (result.message || '알 수 없는 오류'));
+                    customAlert('계좌 재인증에 실패했습니다: ' + (result.message || '알 수 없는 오류'));
                 }
                 
                 loadExternalAccounts();
             } catch (error) {
                 console.error('계좌 재인증 오류:', error);
-                alert('계좌 재인증 중 오류가 발생했습니다.');
+                customAlert('계좌 재인증 중 오류가 발생했습니다.');
             }
         }
 
         // 외부 계좌 삭제
         async function deleteExternalAccount(accountId) {
-            if (!confirm('정말로 이 외부 계좌 연결을 해제하시겠습니까?')) {
+            const confirmed = await customConfirm('정말로 이 외부 계좌 연결을 해제하시겠습니까?');
+            if (!confirmed) {
                 return;
             }
             
@@ -1093,20 +1134,48 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    alert('외부 계좌 연결이 해제되었습니다.');
+                    customAlert('외부 계좌 연결이 해제되었습니다.');
                     loadExternalAccounts();
                 } else {
-                    alert(result.message || '외부 계좌 연결 해제에 실패했습니다.');
+                    customAlert(result.message || '외부 계좌 연결 해제에 실패했습니다.');
                 }
             } catch (error) {
                 console.error('외부 계좌 삭제 오류:', error);
-                alert('외부 계좌 연결 해제 중 오류가 발생했습니다.');
+                customAlert('외부 계좌 연결 해제 중 오류가 발생했습니다.');
             }
         }
 
         // 뒤로가기
         function goBack() {
             window.location.href = '/main.html';
+        }
+
+        // 커스텀 알림창 함수
+        let confirmCallback = null;
+        
+        function customAlert(message) {
+            document.getElementById('alertMessage').textContent = message;
+            document.getElementById('customAlertModal').style.display = 'flex';
+        }
+        
+        function closeCustomAlert() {
+            document.getElementById('customAlertModal').style.display = 'none';
+        }
+        
+        function customConfirm(message) {
+            return new Promise((resolve) => {
+                document.getElementById('confirmMessage').textContent = message;
+                document.getElementById('customConfirmModal').style.display = 'flex';
+                confirmCallback = resolve;
+            });
+        }
+        
+        function closeCustomConfirm(result) {
+            document.getElementById('customConfirmModal').style.display = 'none';
+            if (confirmCallback) {
+                confirmCallback(result);
+                confirmCallback = null;
+            }
         }
 
         console.log('=== 계좌 관리 페이지 스크립트 로드 완료 ===');

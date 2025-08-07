@@ -194,6 +194,140 @@ public class UserAccountService {
     }
     
     /**
+     * 기본 계좌 입금
+     */
+    @Transactional
+    public UserAccount depositToPrimaryAccount(Long userId, BigDecimal amount, String memo) {
+        log.info("기본 계좌 입금: userId={}, amount={}", userId, amount);
+        
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("입금 금액은 0보다 커야 합니다");
+        }
+        
+        UserAccount primaryAccount = getPrimaryAccount(userId)
+                .orElseThrow(() -> new AccountNotFoundException("기본 계좌를 찾을 수 없습니다"));
+        
+        BigDecimal oldBalance = primaryAccount.getBalance();
+        BigDecimal newBalance = oldBalance.add(amount);
+        
+        primaryAccount.setBalance(newBalance);
+        primaryAccount.setUpdatedAt(LocalDateTime.now());
+        
+        UserAccount updatedAccount = userAccountRepository.save(primaryAccount);
+        
+        log.info("기본 계좌 입금 완료: accountNumber={}, {} -> {}", 
+                 primaryAccount.getAccountNumber(), oldBalance, newBalance);
+        
+        auditLogService.logSuccess("DEPOSIT", "ACCOUNT", primaryAccount.getAccountNumber(), 
+                memo != null ? memo : "입금", null);
+        
+        return updatedAccount;
+    }
+    
+    /**
+     * 기본 계좌 출금
+     */
+    @Transactional
+    public UserAccount withdrawFromPrimaryAccount(Long userId, BigDecimal amount, String memo) {
+        log.info("기본 계좌 출금: userId={}, amount={}", userId, amount);
+        
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("출금 금액은 0보다 커야 합니다");
+        }
+        
+        UserAccount primaryAccount = getPrimaryAccount(userId)
+                .orElseThrow(() -> new AccountNotFoundException("기본 계좌를 찾을 수 없습니다"));
+        
+        BigDecimal oldBalance = primaryAccount.getBalance();
+        
+        if (oldBalance.compareTo(amount) < 0) {
+            throw new IllegalArgumentException("잔액이 부족합니다");
+        }
+        
+        BigDecimal newBalance = oldBalance.subtract(amount);
+        
+        primaryAccount.setBalance(newBalance);
+        primaryAccount.setUpdatedAt(LocalDateTime.now());
+        
+        UserAccount updatedAccount = userAccountRepository.save(primaryAccount);
+        
+        log.info("기본 계좌 출금 완료: accountNumber={}, {} -> {}", 
+                 primaryAccount.getAccountNumber(), oldBalance, newBalance);
+        
+        auditLogService.logSuccess("WITHDRAW", "ACCOUNT", primaryAccount.getAccountNumber(), 
+                memo != null ? memo : "출금", null);
+        
+        return updatedAccount;
+    }
+    
+    /**
+     * 특정 계좌 입금
+     */
+    @Transactional
+    public UserAccount depositToAccount(Long userId, String accountNumber, BigDecimal amount, String memo) {
+        log.info("계좌 입금: userId={}, accountNumber={}, amount={}", userId, accountNumber, amount);
+        
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("입금 금액은 0보다 커야 합니다");
+        }
+        
+        UserAccount account = userAccountRepository.findByUserIdAndAccountNumber(userId, accountNumber)
+                .orElseThrow(() -> new AccountNotFoundException("계좌를 찾을 수 없습니다: " + accountNumber));
+        
+        BigDecimal oldBalance = account.getBalance();
+        BigDecimal newBalance = oldBalance.add(amount);
+        
+        account.setBalance(newBalance);
+        account.setUpdatedAt(LocalDateTime.now());
+        
+        UserAccount updatedAccount = userAccountRepository.save(account);
+        
+        log.info("계좌 입금 완료: accountNumber={}, {} -> {}", 
+                 accountNumber, oldBalance, newBalance);
+        
+        auditLogService.logSuccess("DEPOSIT", "ACCOUNT", accountNumber, 
+                memo != null ? memo : "입금", null);
+        
+        return updatedAccount;
+    }
+    
+    /**
+     * 특정 계좌 출금
+     */
+    @Transactional
+    public UserAccount withdrawFromAccount(Long userId, String accountNumber, BigDecimal amount, String memo) {
+        log.info("계좌 출금: userId={}, accountNumber={}, amount={}", userId, accountNumber, amount);
+        
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("출금 금액은 0보다 커야 합니다");
+        }
+        
+        UserAccount account = userAccountRepository.findByUserIdAndAccountNumber(userId, accountNumber)
+                .orElseThrow(() -> new AccountNotFoundException("계좌를 찾을 수 없습니다: " + accountNumber));
+        
+        BigDecimal oldBalance = account.getBalance();
+        
+        if (oldBalance.compareTo(amount) < 0) {
+            throw new IllegalArgumentException("잔액이 부족합니다");
+        }
+        
+        BigDecimal newBalance = oldBalance.subtract(amount);
+        
+        account.setBalance(newBalance);
+        account.setUpdatedAt(LocalDateTime.now());
+        
+        UserAccount updatedAccount = userAccountRepository.save(account);
+        
+        log.info("계좌 출금 완료: accountNumber={}, {} -> {}", 
+                 accountNumber, oldBalance, newBalance);
+        
+        auditLogService.logSuccess("WITHDRAW", "ACCOUNT", accountNumber, 
+                memo != null ? memo : "출금", null);
+        
+        return updatedAccount;
+    }
+    
+    /**
      * 고유한 계좌번호 생성
      */
     private String generateUniqueAccountNumber() {
