@@ -37,32 +37,64 @@ function checkAuth() {
     }
 }
 
-// 잔액 조회
+// 잔액 조회 (기본 계좌 사용)
 async function loadBalance() {
     const token = localStorage.getItem('accessToken');
-    const accountNumber = localStorage.getItem('accountNumber'); // 실제 계좌번호 사용
     
-    if (!token || !accountNumber) {
+    if (!token) {
         showAlert('로그인 정보가 없습니다.');
         return;
     }
 
     try {
-        const response = await fetch('/api/accounts', {
+        const response = await fetch('/api/user-accounts', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         });
 
         if (response.ok) {
-            const data = await response.json();
-            document.getElementById('currentBalance').textContent = 
-                `${Number(data.balance).toLocaleString()} 원`;
-            document.getElementById('balanceAccountNumber').textContent = data.accountNumber;
+            const result = await response.json();
+            const accounts = result.accounts || [];
+            
+            // 기본 계좌 찾기 (isPrimary가 true인 계좌)
+            const primaryAccount = accounts.find(account => account.isPrimary);
+            
+            if (primaryAccount) {
+                const balance = primaryAccount.balance || 0;
+                const accountNumber = primaryAccount.accountNumber || 'N/A';
+                const accountName = primaryAccount.accountName || '기본계좌';
+                
+                document.getElementById('currentBalance').textContent = 
+                    `${Number(balance).toLocaleString()} 원`;
+                document.getElementById('balanceAccountNumber').textContent = 
+                    `${accountName} (${accountNumber})`;
+                
+                console.log('기본 계좌 잔액 조회 성공:', { balance, accountNumber, accountName });
+            } else if (accounts.length > 0) {
+                // 기본 계좌가 없으면 첫 번째 계좌 사용
+                const firstAccount = accounts[0];
+                const balance = firstAccount.balance || 0;
+                const accountNumber = firstAccount.accountNumber || 'N/A';
+                const accountName = firstAccount.accountName || '계좌';
+                
+                document.getElementById('currentBalance').textContent = 
+                    `${Number(balance).toLocaleString()} 원`;
+                document.getElementById('balanceAccountNumber').textContent = 
+                    `${accountName} (${accountNumber})`;
+                    
+                console.log('첫 번째 계좌 잔액 조회 성공:', { balance, accountNumber, accountName });
+            } else {
+                // 계좌가 없는 경우
+                document.getElementById('currentBalance').textContent = '0 원';
+                document.getElementById('balanceAccountNumber').textContent = '계좌를 생성해주세요';
+                
+                console.log('등록된 계좌가 없습니다.');
+            }
         } else {
-            // 초기 잔액 0원으로 표시 (계좌가 없는 경우)
-            document.getElementById('currentBalance').textContent = '0 원';
-            document.getElementById('balanceAccountNumber').textContent = accountNumber;
+            console.error('계좌 목록 조회 실패:', response.status);
+            document.getElementById('currentBalance').textContent = '조회 실패';
+            document.getElementById('balanceAccountNumber').textContent = '오류 발생';
         }
     } catch (error) {
         console.error('Balance load error:', error);
@@ -99,6 +131,9 @@ async function testDeposit() {
             showAlert('입금이 완료되었습니다!');
             loadBalance(); // 잔액 새로고침
             loadTransactionHistory(); // 거래내역 새로고침
+            
+            // 계좌관리 페이지를 위한 이벤트 발생
+            window.dispatchEvent(new CustomEvent('accountBalanceUpdated'));
         } else {
             const data = await response.json();
             showAlert(data.message || '입금에 실패했습니다.');
@@ -138,6 +173,9 @@ async function testWithdraw() {
             showAlert('출금이 완료되었습니다!');
             loadBalance(); // 잔액 새로고침
             loadTransactionHistory(); // 거래내역 새로고침
+            
+            // 계좌관리 페이지를 위한 이벤트 발생
+            window.dispatchEvent(new CustomEvent('accountBalanceUpdated'));
         } else {
             const data = await response.json();
             showAlert(data.message || '출금에 실패했습니다.');
