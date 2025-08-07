@@ -2,8 +2,207 @@
 let emailDuplicateChecked = false;
 let phoneDuplicateChecked = false;
 
+// 토큰 갱신 중복 방지 플래그
+let isRefreshing = false;
+
+// 토큰 만료 체크 및 자동 갱신
+async function checkTokenExpiration() {
+    const accessToken = localStorage.getItem('accessToken');
+    const refreshToken = localStorage.getItem('refreshToken');
+    
+    if (!accessToken || !refreshToken) {
+        console.log('토큰이 없어 로그인 페이지로 이동');
+        logout();
+        return;
+    }
+
+    try {
+        // JWT 토큰 디코딩 (payload 부분만)
+        const payload = JSON.parse(atob(accessToken.split('.')[1]));
+        const expirationTime = payload.exp * 1000; // 밀리초로 변환
+        const currentTime = Date.now();
+        
+        // 이미 만료되었으면 즉시 갱신 시도
+        if (currentTime >= expirationTime) {
+            console.log('Access Token 이미 만료됨, 갱신 시도...');
+            const success = await tryRefreshToken();
+            if (!success) {
+                console.log('토큰 갱신 실패, 즉시 로그아웃 처리');
+                showAutoLogoutPopup();
+                return;
+            }
+        }
+        
+        // 만료 30초 전에 자동 갱신 시도
+        if (expirationTime - currentTime < 30000 && expirationTime > currentTime) {
+            console.log('Access Token 만료 30초 전, 자동 갱신 시도...');
+            await tryRefreshToken();
+        }
+        
+    } catch (error) {
+        console.error('토큰 만료 체크 중 오류:', error);
+        // 토큰 파싱 오류 시 로그아웃
+        showAutoLogoutPopup();
+    }
+}
+
+// 백그라운드에서 토큰 상태 주기적 체크
+async function backgroundTokenCheck() {
+    const accessToken = localStorage.getItem('accessToken');
+    const refreshToken = localStorage.getItem('refreshToken');
+    
+    if (!accessToken || !refreshToken) {
+        return; // 토큰이 없으면 체크하지 않음
+    }
+
+    try {
+        // 현재 시간과 토큰 만료 시간 비교
+        const payload = JSON.parse(atob(accessToken.split('.')[1]));
+        const expirationTime = payload.exp * 1000;
+        const currentTime = Date.now();
+        
+        // 만료되었거나 곧 만료될 예정이면 갱신 시도
+        if (currentTime >= expirationTime || (expirationTime - currentTime < 60000)) { // 1분 전
+            console.log('🔄 백그라운드 토큰 갱신 시도...');
+            const success = await tryRefreshToken();
+            if (!success) {
+                console.log('❌ 백그라운드 토큰 갱신 실패, 로그아웃');
+                showAutoLogoutPopup();
+            }
+        }
+    } catch (error) {
+        console.error('백그라운드 토큰 체크 오류:', error);
+        // 토큰 파싱 실패 시 로그아웃
+        showAutoLogoutPopup();
+    }
+}
+
+// Refresh Token으로 토큰 갱신 시도
+async function tryRefreshToken() {
+    // 이미 갱신 중이면 중복 실행 방지
+    if (isRefreshing) {
+        console.log('🔄 이미 토큰 갱신 중... 대기');
+        return false;
+    }
+    
+    // 로그아웃 진행 중이면 갱신 시도하지 않음
+    if (logoutInProgress) {
+        console.log('🚪 로그아웃 진행 중... 갱신 시도 중단');
+        return false;
+    }
+    
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) {
+        console.log('❌ Refresh Token이 없습니다.');
+        return false;
+    }
+
+    isRefreshing = true;
+    
+    try {
+        console.log('🔄 === Refresh Token으로 토큰 갱신 시도 ===');
+        console.log('🔄 Refresh Token:', refreshToken.substring(0, 20) + '...');
+        
+        const response = await fetch('/auth/refresh', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                refreshToken: refreshToken
+            })
+        });
+
+        console.log('🔄 응답 상태:', response.status);
+
+        if (response.ok) {
+            const data = await response.json();
+            
+            // 새로운 토큰들 저장
+            localStorage.setItem('accessToken', data.accessToken);
+            localStorage.setItem('refreshToken', data.refreshToken);
+            
+            console.log('✅ === 토큰 갱신 성공! ===');
+            console.log('✅ 새 Access Token:', data.accessToken.substring(0, 20) + '...');
+            console.log('✅ 새 Refresh Token:', data.refreshToken.substring(0, 20) + '...');
+            
+            return true;
+        } else {
+            console.log('❌ Refresh Token 갱신 실패:', response.status);
+            const errorText = await response.text();
+            console.log('❌ 에러 응답:', errorText);
+            
+            if (response.status === 400 && (errorText.includes('EXPIRED_REFRESH_TOKEN') || errorText.includes('INVALID_REFRESH_TOKEN'))) {
+                console.log('🚪 Refresh Token 만료/무효로 즉시 로그아웃 실행');
+                showAutoLogoutPopup();
+                return false;
+            }
+            
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ 토큰 갱신 중 오류:', error);
+        showAutoLogoutPopup();
+        return false;
+    } finally {
+        isRefreshing = false;
+    }
+}
+
+// 토큰 만료 경고 표시
+function showTokenExpirationWarning() {
+    const warningDiv = document.createElement('div');
+    warningDiv.id = 'tokenExpirationWarning';
+    warningDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #ff6b6b;
+        color: white;
+        padding: 15px;
+        border-radius: 5px;
+        z-index: 1000;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        animation: fadeIn 0.3s ease-in;
+    `;
+    warningDiv.innerHTML = `
+        <strong>토큰 만료 임박</strong><br>
+        곧 자동 로그아웃됩니다. 새로고침하거나 다시 로그인해주세요.
+        <button onclick="this.parentElement.remove()" style="margin-left: 10px; background: none; border: none; color: white; cursor: pointer;">×</button>
+    `;
+    
+    if (!document.getElementById('tokenExpirationWarning')) {
+        document.body.appendChild(warningDiv);
+    }
+}
+
+// 로그아웃 함수는 common.js에서 제공됨
+
 // 페이지 로드 시 실행
 document.addEventListener('DOMContentLoaded', function() {
+    // 현재 페이지가 로그인 관련 페이지인지 확인
+    const isLoginPage = window.location.pathname.includes('login') || 
+                       window.location.pathname.includes('register') || 
+                       window.location.pathname === '/' || 
+                       window.location.pathname === '/index.html';
+    
+    // 로그인 페이지가 아닐 때만 토큰 체크 실행
+    if (!isLoginPage) {
+        // 설정에서 체크 주기 가져오기 (기본값: 30초, 60초)
+        const accessCheckInterval = 30000; // 30초
+        const backgroundCheckInterval = 60000; // 60초
+        
+        // 토큰 만료 체크 시작
+        setInterval(checkTokenExpiration, accessCheckInterval);
+        
+        // 백그라운드 토큰 체크 시작
+        setInterval(backgroundTokenCheck, backgroundCheckInterval);
+        
+        // 초기 토큰 체크
+        checkTokenExpiration();
+        backgroundTokenCheck();
+    }
+    
     // 로그인 폼 처리
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
@@ -88,7 +287,12 @@ async function handleLogin(e) {
         if (response.ok) {
             // 토큰 저장
             localStorage.setItem('accessToken', data.accessToken);
+            localStorage.setItem('refreshToken', data.refreshToken);
             localStorage.setItem('userPhone', phoneNumber);
+            
+            console.log('로그인 성공! 토큰 저장됨:');
+            console.log('Access Token:', data.accessToken);
+            console.log('Refresh Token:', data.refreshToken);
             
             // 계좌번호와 사용자 이름이 응답에 포함되어 있다면 저장
             if (data.accountNumber) {

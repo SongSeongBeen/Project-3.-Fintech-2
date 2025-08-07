@@ -1,7 +1,10 @@
 // API 기본 설정
 const API_BASE_URL = 'http://localhost:8090';
 
-// API 호출 함수
+// 토큰 갱신 중복 방지 플래그
+let isRefreshing = false;
+
+// API 호출 함수 (자동 토큰 갱신 포함)
 async function apiCall(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
     
@@ -29,6 +32,41 @@ async function apiCall(endpoint, options = {}) {
     try {
         const response = await fetch(url, finalOptions);
         
+        // 401 Unauthorized - Access Token 만료
+        if (response.status === 401) {
+            console.log('Access Token 만료됨. Refresh Token으로 갱신 시도...');
+            
+            const refreshSuccess = await refreshAccessToken();
+            if (refreshSuccess) {
+                // 새 토큰으로 재시도
+                const newToken = localStorage.getItem('accessToken');
+                finalOptions.headers['Authorization'] = `Bearer ${newToken}`;
+                const retryResponse = await fetch(url, finalOptions);
+                
+                if (!retryResponse.ok) {
+                    const errorData = await retryResponse.json().catch(() => ({}));
+                    throw new Error(errorData.message || `HTTP error! status: ${retryResponse.status}`);
+                }
+                
+                return await retryResponse.json();
+            } else {
+                // Refresh Token도 만료됨 - 즉시 로그아웃
+                console.log('Refresh Token도 만료됨. 즉시 로그아웃 처리...');
+                logout();
+                throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.');
+            }
+        }
+        
+        // 400 Bad Request - Refresh Token 관련 에러
+        if (response.status === 400) {
+            const errorData = await response.json().catch(() => ({}));
+            if (errorData.error === 'EXPIRED_REFRESH_TOKEN' || errorData.error === 'INVALID_REFRESH_TOKEN') {
+                console.log('Refresh Token 만료/무효. 즉시 로그아웃 처리...');
+                logout();
+                throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.');
+            }
+        }
+        
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             
@@ -49,6 +87,77 @@ async function apiCall(endpoint, options = {}) {
     }
 }
 
+// Refresh Token으로 Access Token 갱신
+async function refreshAccessToken() {
+    // 이미 갱신 중이면 중복 실행 방지
+    if (isRefreshing) {
+        console.log('🔄 이미 토큰 갱신 중... 대기');
+        return false;
+    }
+    
+    // 로그아웃 진행 중이면 갱신 시도하지 않음
+    if (logoutInProgress) {
+        console.log('🚪 로그아웃 진행 중... 갱신 시도 중단');
+        return false;
+    }
+    
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) {
+        console.log('Refresh Token이 없습니다.');
+        return false;
+    }
+
+    isRefreshing = true;
+    
+    try {
+        console.log('Refresh Token 사용하여 Access Token 갱신 중...');
+        
+        const response = await fetch('/auth/refresh', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                refreshToken: refreshToken
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            
+            // 새로운 토큰들 저장
+            localStorage.setItem('accessToken', data.accessToken);
+            localStorage.setItem('refreshToken', data.refreshToken);
+            
+            console.log('토큰 갱신 성공!');
+            console.log('새 Access Token:', data.accessToken.substring(0, 20) + '...');
+            console.log('새 Refresh Token:', data.refreshToken.substring(0, 20) + '...');
+            
+            return true;
+        } else {
+            console.log('Refresh Token 갱신 실패:', response.status);
+            const errorText = await response.text();
+            console.log('에러 응답:', errorText);
+            
+            // 만료된 경우 즉시 로그아웃
+            if (errorText.includes('EXPIRED_REFRESH_TOKEN') || errorText.includes('INVALID_REFRESH_TOKEN')) {
+                console.log('Refresh Token 만료/무효로 즉시 로그아웃');
+                showAutoLogoutPopup();
+                return false;
+            }
+            
+            return false;
+        }
+    } catch (error) {
+        console.error('토큰 갱신 중 오류:', error);
+        // 네트워크 오류 시에도 로그아웃
+        showAutoLogoutPopup();
+        return false;
+    } finally {
+        isRefreshing = false;
+    }
+}
+
 // 인증 관련 API
 async function register(phoneNumber, password) {
     return apiCall('/api/auth/register', {
@@ -64,11 +173,7 @@ async function login(phoneNumber, password) {
     });
 }
 
-async function logout() {
-    return apiCall('/api/auth/logout', {
-        method: 'POST',
-    });
-}
+// 로그아웃 함수는 common.js에서 제공됨
 
 async function refreshToken() {
     const refreshToken = localStorage.getItem('refreshToken');

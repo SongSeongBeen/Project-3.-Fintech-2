@@ -463,6 +463,7 @@
             cursor: not-allowed;
         }
     </style>
+    <script defer src="/js/common.js"></script>
     <script defer src="/js/main.js"></script>
 </head>
 <body>
@@ -509,6 +510,7 @@
                         </div>
                     </div>
                 </div>
+    
                 <button class="btn btn-small" onclick="logout()">로그아웃</button>
             </div>
         </div>
@@ -936,7 +938,12 @@
                     closePinModal();
                 } else {
                     console.log('PIN 등록 실패:', data.message);
-                    showPinFormError('newPin', data.message || 'PIN 등록에 실패했습니다.');
+                    // 비밀번호 관련 에러인 경우 현재 비밀번호 필드에 표시
+                    if (data.message && data.message.includes('비밀번호')) {
+                        showPinFormError('currentPassword', data.message);
+                    } else {
+                        showPinFormError('newPin', data.message || 'PIN 등록에 실패했습니다.');
+                    }
                 }
             } catch (error) {
                 console.error('PIN 등록 오류:', error);
@@ -1128,7 +1135,7 @@
                     await loadCurrentProfile();
                 } else {
                     console.log('비밀번호 확인 실패:', data.message);
-                    showProfileError('profilePasswordCheck', data.message || '비밀번호가 일치하지 않습니다.');
+                    showProfileError('profilePasswordCheck', data.message || '현재 비밀번호가 일치하지 않습니다.');
                 }
             } catch (error) {
                 console.error('비밀번호 확인 오류:', error);

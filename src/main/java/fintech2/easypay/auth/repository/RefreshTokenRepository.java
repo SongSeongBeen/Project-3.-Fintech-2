@@ -31,9 +31,18 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
     void revokeAllByUserId(@Param("userId") Long userId, @Param("revokedAt") LocalDateTime revokedAt);
     
     /**
+     * 사용자 ID로 기존 Refresh Token 업데이트 (한 사용자당 하나만 유지)
+     */
+    @Modifying
+    @Query("UPDATE RefreshToken rt SET rt.token = :token, rt.expiresAt = :expiresAt, rt.isRevoked = false, rt.revokedAt = null WHERE rt.userId = :userId")
+    int updateRefreshTokenForUser(@Param("userId") Long userId, @Param("token") String token, @Param("expiresAt") LocalDateTime expiresAt);
+    
+    /**
      * 만료된 토큰들 삭제
+     *
+     * @return
      */
     @Modifying
     @Query("DELETE FROM RefreshToken rt WHERE rt.expiresAt < :now")
-    void deleteExpiredTokens(@Param("now") LocalDateTime now);
+    int deleteExpiredTokens(@Param("now") LocalDateTime now);
 } 

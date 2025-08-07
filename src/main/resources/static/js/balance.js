@@ -1,5 +1,27 @@
+// 토큰 갱신 중복 방지 플래그는 common.js에서 관리됨
+
 // 페이지 로드 시 실행
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    // 현재 페이지가 로그인 관련 페이지인지 확인
+    const isLoginPage = window.location.pathname.includes('login') || 
+                       window.location.pathname.includes('register') || 
+                       window.location.pathname === '/' || 
+                       window.location.pathname === '/index.html';
+    
+    // 로그인 페이지가 아닐 때만 토큰 체크 실행
+    if (!isLoginPage) {
+        // 서버에서 클라이언트 설정 로드
+        await loadClientConfig();
+        
+        // 서버 설정을 사용한 토큰 체크 시작
+        setInterval(checkTokenExpiration, clientConfig.accessCheckInterval);
+        setInterval(backgroundTokenCheck, clientConfig.backgroundCheckInterval);
+        
+        // 초기 토큰 체크는 즉시 실행
+        checkTokenExpiration();
+        backgroundTokenCheck();
+    }
+    
     checkAuth();
     loadBalance();
     loadTransactionHistory();
@@ -205,3 +227,39 @@ function showAlert(message) {
         }, 3000);
     }
 } 
+
+// 토큰 만료 체크는 common.js에서 제공됨
+
+// 백그라운드 토큰 체크
+async function backgroundTokenCheck() {
+    const accessToken = localStorage.getItem('accessToken');
+    const refreshToken = localStorage.getItem('refreshToken');
+    
+    if (!accessToken || !refreshToken) {
+        return;
+    }
+
+    try {
+        const payload = JSON.parse(atob(accessToken.split('.')[1]));
+        const expirationTime = payload.exp * 1000;
+        const currentTime = Date.now();
+        
+        // 만료되었거나 곧 만료될 예정이면 갱신 시도
+        if (currentTime >= expirationTime || (expirationTime - currentTime < 60000)) {
+            console.log('🔄 백그라운드 토큰 갱신 시도...');
+            const success = await window.refreshToken(); // common.js의 함수 사용
+            if (!success) {
+                console.log('❌ 백그라운드 토큰 갱신 실패, 로그아웃');
+                showAutoLogoutPopup();
+            }
+        }
+    } catch (error) {
+        console.error('백그라운드 토큰 체크 오류:', error);
+        showAutoLogoutPopup();
+    }
+}
+
+// 로그아웃 함수
+// 로그아웃 함수는 common.js에서 제공됨
+
+// 토큰 갱신은 common.js에서 제공됨 

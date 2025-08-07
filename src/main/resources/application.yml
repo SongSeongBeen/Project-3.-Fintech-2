@@ -14,8 +14,8 @@ spring:
     baseline-on-migrate: true
     locations: classpath:db/migration
 
-jwt:
-  expiration: 86400000
+#jwt:
+#  expiration: 86400000
 
 # 외부 은행 API 설정
 external:

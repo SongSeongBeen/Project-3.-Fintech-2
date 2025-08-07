@@ -1,13 +1,8 @@
 package fintech2.easypay.auth.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
+@Data
 public class TokenRefreshRequest {
-    
-    @NotBlank(message = "Refresh 토큰은 필수입니다")
     private String refreshToken;
 } 

@@ -41,6 +41,7 @@ public class AuthService {
     private final AccountBalanceRepository accountBalanceRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final TokenService tokenService;
     private final LoginHistoryService loginHistoryService;
     private final AuditLogService auditLogService;
     private final AlarmService alarmService;
@@ -190,15 +191,16 @@ public class AuthService {
                     .balance(BigDecimal.ZERO)
                     .build();
             accountBalanceRepository.save(accountBalance);
-            // 12. JWT 발급
-            String jwt = jwtService.generateAccessToken(user.getPhoneNumber());
+            // 12. 토큰 쌍 생성 (Access Token + Refresh Token)
+            TokenService.TokenPair tokenPair = tokenService.generateTokenPair(user);
             // 13. 감사로그 기록
             auditLogService.logSuccess(user.getId(), "USER_REGISTER", "USER", user.getId().toString(), 
                     null, "회원가입 완료 - 계좌번호: " + accountNumber);
             // 14. 응답
             Map<String, Object> resp = new HashMap<>();
             resp.put("message", "회원가입이 완료되었습니다");
-            resp.put("accessToken", jwt);
+            resp.put("accessToken", tokenPair.getAccessToken());
+            resp.put("refreshToken", tokenPair.getRefreshToken());
             resp.put("accountNumber", accountNumber);
             return ResponseEntity.status(HttpStatus.CREATED).body(resp);
         } catch (Exception e) {
@@ -262,7 +264,8 @@ public class AuthService {
             user.resetLoginFailCount();
             userRepository.save(user);
             
-            String jwt = jwtService.generateAccessToken(user.getPhoneNumber());
+            // 토큰 쌍 생성 (Access Token + Refresh Token)
+            TokenService.TokenPair tokenPair = tokenService.generateTokenPair(user);
             
             // 로그인 성공 이력 기록
             loginHistoryService.recordLoginSuccess(phoneNumber, user.getId(), ipAddress, userAgent);
@@ -274,7 +277,8 @@ public class AuthService {
                 String.format("로그인 성공 - %s에 로그인되었습니다", loginTime));
             
             Map<String, Object> resp = new HashMap<>();
-            resp.put("accessToken", jwt);
+            resp.put("accessToken", tokenPair.getAccessToken());
+            resp.put("refreshToken", tokenPair.getRefreshToken());
             resp.put("accountNumber", user.getAccountNumber());
             resp.put("userName", user.getName());
             return ResponseEntity.ok(resp);

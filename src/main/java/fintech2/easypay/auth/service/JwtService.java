@@ -23,7 +23,7 @@ public class JwtService {
     @Value("${jwt.secret:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}")
     private String secretKey;
 
-    @Value("${jwt.expiration:86400000}") // 24시간
+    @Value("${jwt.expiration.refresh:60000}") // 24시간, 테스트 5분
     private long jwtExpiration;
 
     public String generateAccessToken(String phoneNumber) {
