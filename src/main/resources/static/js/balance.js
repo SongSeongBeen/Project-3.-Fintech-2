@@ -26,7 +26,7 @@ async function loadBalance() {
     }
 
     try {
-        const response = await fetch(`/accounts/${accountNumber}/balance`, {
+        const response = await fetch('/api/accounts', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -61,17 +61,15 @@ async function testDeposit() {
     const accountNumber = localStorage.getItem('accountNumber'); // 실제 계좌번호 사용
 
     try {
-        const response = await fetch('/accounts/update-balance', {
+        const response = await fetch('/api/accounts/deposit', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
-                accountNumber: accountNumber,
                 amount: Number(amount),
-                transactionType: 'DEPOSIT',
-                description: '테스트 입금'
+                memo: '테스트 입금'
             })
         });
 
@@ -102,17 +100,15 @@ async function testWithdraw() {
     const accountNumber = localStorage.getItem('accountNumber'); // 실제 계좌번호 사용
 
     try {
-        const response = await fetch('/accounts/update-balance', {
+        const response = await fetch('/api/accounts/withdraw', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
-                accountNumber: accountNumber,
-                amount: -Number(amount), // 음수로 전송
-                transactionType: 'WITHDRAWAL',
-                description: '테스트 출금'
+                amount: Number(amount),
+                memo: '테스트 출금'
             })
         });
 
@@ -136,7 +132,7 @@ async function loadTransactionHistory() {
     const accountNumber = localStorage.getItem('accountNumber'); // 실제 계좌번호 사용
 
     try {
-        const response = await fetch(`/accounts/${accountNumber}/transactions`, {
+        const response = await fetch(`/api/accounts/${accountNumber}/transactions`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }

@@ -1,5 +1,5 @@
 // API 기본 설정
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = 'http://localhost:8090';
 
 // API 호출 함수
 async function apiCall(endpoint, options = {}) {
@@ -51,21 +51,21 @@ async function apiCall(endpoint, options = {}) {
 
 // 인증 관련 API
 async function register(phoneNumber, password) {
-    return apiCall('/auth/register', {
+    return apiCall('/api/auth/register', {
         method: 'POST',
         body: JSON.stringify({ phoneNumber, password }),
     });
 }
 
 async function login(phoneNumber, password) {
-    return apiCall('/auth/login', {
+    return apiCall('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({ phoneNumber, password }),
     });
 }
 
 async function logout() {
-    return apiCall('/auth/logout', {
+    return apiCall('/api/auth/logout', {
         method: 'POST',
     });
 }
@@ -76,7 +76,7 @@ async function refreshToken() {
         throw new Error('Refresh token이 없습니다.');
     }
     
-    return apiCall('/auth/refresh', {
+    return apiCall('/api/auth/refresh', {
         method: 'POST',
         body: JSON.stringify({ refreshToken }),
     });
@@ -84,29 +84,29 @@ async function refreshToken() {
 
 // 계좌 관련 API
 async function getAccountBalance() {
-    return apiCall('/account/balance');
+    return apiCall('/api/accounts');
 }
 
 async function getTransactionHistory(type = 'ALL') {
-    return apiCall(`/account/transactions?type=${type}`);
+    return apiCall(`/api/accounts/transactions?type=${type}`);
 }
 
 async function transfer(recipientAccount, amount, memo) {
-    return apiCall('/account/transfer', {
+    return apiCall('/api/transfers', {
         method: 'POST',
         body: JSON.stringify({ recipientAccount, amount, memo }),
     });
 }
 
 async function deposit(amount, memo) {
-    return apiCall('/account/deposit', {
+    return apiCall('/api/accounts/deposit', {
         method: 'POST',
         body: JSON.stringify({ amount, memo }),
     });
 }
 
 async function withdraw(amount, memo) {
-    return apiCall('/account/withdraw', {
+    return apiCall('/api/accounts/withdraw', {
         method: 'POST',
         body: JSON.stringify({ amount, memo }),
     });
@@ -114,7 +114,7 @@ async function withdraw(amount, memo) {
 
 // 결제 관련 API
 async function makePayment(merchantName, amount, category) {
-    return apiCall('/account/payment', {
+    return apiCall('/api/payments', {
         method: 'POST',
         body: JSON.stringify({ merchantName, amount, category }),
     });
@@ -122,11 +122,11 @@ async function makePayment(merchantName, amount, category) {
 
 // 감사 로그 API
 async function getAuditLogs() {
-    return apiCall('/audit/logs');
+    return apiCall('/api/audit/logs');
 }
 
 async function getLoginHistory() {
-    return apiCall('/audit/login-history');
+    return apiCall('/api/audit/login-history');
 }
 
 // 유틸리티 함수

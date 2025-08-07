@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/accounts")
+@RequestMapping("/api/accounts")
 @RequiredArgsConstructor
 public class AccountController {
     private final AccountService accountService;
@@ -20,6 +20,14 @@ public class AccountController {
     @GetMapping("/{accountNumber}/balance")
     public ResponseEntity<?> getBalance(@PathVariable String accountNumber, @RequestHeader("Authorization") String token) {
         return accountService.getBalance(accountNumber, token);
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getMyAccount(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        if (userPrincipal == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "UNAUTHORIZED", "message", "인증이 필요합니다"));
+        }
+        return accountService.getMyAccount(userPrincipal);
     }
 
     @GetMapping("/balance")

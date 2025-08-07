@@ -338,6 +338,17 @@
             justify-content: space-between;
         }
 
+        .transfer-memo {
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
+            font-style: italic;
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border-left: 2px solid #667eea;
+        }
+
         /* 다음 단계 버튼 */
         .next-step-section {
             margin-top: 30px;
@@ -731,6 +742,38 @@
             padding: 40px 20px;
             color: #666;
         }
+
+        /* 내 계좌 항목 스타일 */
+        .my-account-item {
+            position: relative;
+            cursor: not-allowed !important;
+            background: #f8f8f8 !important;
+            border-left: 4px solid #ffc107;
+        }
+
+        .my-account-item:hover {
+            background: #f0f0f0 !important;
+            transform: none !important;
+        }
+
+        .my-account-label {
+            color: #ffc107;
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        .primary-account-label {
+            color: #28a745;
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        .account-note {
+            font-size: 10px;
+            color: #999;
+            margin-top: 4px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -860,6 +903,25 @@
                 <button class="modal-close" onclick="closeTransferInfoModal()">×</button>
             </div>
             <div class="modal-body">
+                <!-- 송금 계좌 정보 표시 -->
+                <div class="recipient-info-section">
+                    <h4 class="recipient-info-title">송금할 내 계좌</h4>
+                    <div class="recipient-info-card">
+                        <div class="recipient-info-item">
+                            <span class="recipient-info-label">계좌이름:</span>
+                            <span class="recipient-info-value" id="senderAccountName">-</span>
+                        </div>
+                        <div class="recipient-info-item">
+                            <span class="recipient-info-label">계좌번호:</span>
+                            <span class="recipient-info-value" id="senderAccountNumber">-</span>
+                        </div>
+                        <div class="recipient-info-item">
+                            <span class="recipient-info-label">잔액:</span>
+                            <span class="recipient-info-value" id="senderAccountBalance">-</span>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- 받는 계좌 정보 표시 -->
                 <div class="recipient-info-section">
                     <h4 class="recipient-info-title">받는 계좌 정보</h4>
@@ -995,6 +1057,11 @@
             accountHolderName: '',
             isVerified: false
         };
+        let selectedSenderAccount = {
+            accountNumber: '',
+            accountName: '',
+            balance: 0
+        };
         let currentUser = null;
         let pinSessionToken = null;
         let myAccounts = [];
@@ -1059,7 +1126,7 @@
             
             try {
                 console.log('잔액 조회 시작...');
-                const response = await fetch('/accounts/balance', {
+                const response = await fetch('/api/accounts', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -1150,7 +1217,8 @@
             const token = localStorage.getItem('accessToken');
             
             try {
-                const response = await fetch('/accounts', {
+                // 실제 다중 계좌 API 사용
+                const response = await fetch('/api/user-accounts', {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -1159,13 +1227,14 @@
                 if (response.ok) {
                     const result = await response.json();
                     
-                    // 계좌 정보가 있는 경우
-                    if (result.accountNumber) {
-                        myAccounts = [{
-                            bank: 'EasyPay',
-                            accountNumber: result.accountNumber,
-                            balance: result.balance || 0
-                        }];
+                    if (result.success && result.accounts) {
+                        myAccounts = result.accounts.map(account => ({
+                            accountNumber: account.accountNumber,
+                            accountName: account.accountName,
+                            balance: account.balance || 0,
+                            isPrimary: account.isPrimary,
+                            bank: 'EasyPay'
+                        }));
                     } else {
                         myAccounts = [];
                     }
@@ -1194,9 +1263,13 @@
             }
 
             container.innerHTML = myAccounts.map(account => `
-                <div class="account-item" onclick="selectMyAccount('${account.accountNumber}', '${account.bank}')">
-                    <div class="account-info">${account.bank}</div>
+                <div class="account-item" onclick="selectSenderAccount('${account.accountNumber}', '${account.accountName}', ${account.balance})">
+                    <div class="account-info">
+                        ${account.accountName || account.bank}
+                        ${account.isPrimary ? '<span class="primary-account-label">(주계좌)</span>' : ''}
+                    </div>
                     <div class="account-number">${account.accountNumber} (${new Intl.NumberFormat('ko-KR').format(account.balance)}원)</div>
+                    <div class="account-note">※ 이 계좌로 송금합니다</div>
                 </div>
             `).join('');
         }
@@ -1206,9 +1279,12 @@
             const token = localStorage.getItem('accessToken');
             
             try {
-                const response = await fetch('/transfers/sent?size=15&sort=createdAt,desc', {
+                const response = await fetch(`/api/transfers/recent?size=15&sort=createdAt,desc&_t=${Date.now()}`, {
                     headers: {
-                        'Authorization': `Bearer ${token}`
+                        'Authorization': `Bearer ${token}`,
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
                     }
                 });
                 
@@ -1218,32 +1294,22 @@
                     if (result.data && result.data.content) {
                         recentTransfers = result.data.content.map(transfer => ({
                             id: transfer.id,
-                            name: transfer.receiverName || transfer.receiverPhoneNumber || '받는분',
+                            name: transfer.receiverName || '받는분',
                             bank: 'EasyPay',
                             accountNumber: transfer.receiverAccountNumber,
                             lastAmount: transfer.amount,
-                            date: new Date(transfer.createdAt).toLocaleDateString('ko-KR')
+                            date: new Date(transfer.createdAt).toLocaleDateString('ko-KR'),
+                            memo: transfer.memo || ''
                         }));
+                        
+                        renderRecentTransfers();
+                        console.log('최근 송금 내역 로드 완료:', recentTransfers);
+                        console.log('첫 번째 거래의 메모:', recentTransfers[0]?.memo);
                     } else {
+                        console.log('최근 송금 내역이 없습니다');
                         recentTransfers = [];
+                        renderRecentTransfers();
                     }
-                    
-                    // 송금 내역이 없는 경우 테스트 데이터 추가
-                    if (recentTransfers.length === 0) {
-                        recentTransfers = [
-                            { 
-                                id: 1, 
-                                name: '테스트사용자2', 
-                                bank: 'EasyPay', 
-                                accountNumber: 'EP0000000002', 
-                                lastAmount: 10000, 
-                                date: new Date().toLocaleDateString('ko-KR') 
-                            }
-                        ];
-                    }
-                    
-                    renderRecentTransfers();
-                    console.log('최근 송금 내역 로드 완료:', recentTransfers);
                 } else {
                     console.error('송금 내역 조회 실패:', response.status);
                     recentTransfers = [];
@@ -1258,21 +1324,33 @@
 
         // 최근 송금 내역 렌더링
         function renderRecentTransfers() {
+            console.log('=== renderRecentTransfers 호출 ===');
+            console.log('recentTransfers 데이터:', recentTransfers);
+            
             const container = document.getElementById('recentTransfers');
             if (recentTransfers.length === 0) {
                 container.innerHTML = '<div class="empty-state">최근 송금 내역이 없습니다.</div>';
                 return;
             }
 
-            container.innerHTML = recentTransfers.map(transfer => `
+            const html = recentTransfers.map((transfer, index) => {
+                console.log(`거래 ${index + 1}: 이름=${transfer.name}, 메모="${transfer.memo}"`);
+                const memoHtml = transfer.memo ? `<div class="transfer-memo">"${transfer.memo}"</div>` : '';
+                console.log(`메모 HTML: ${memoHtml}`);
+                
+                return `
                 <div class="transfer-item" onclick="selectRecentTransfer('${transfer.accountNumber}', '${transfer.name}', '${transfer.bank}')">
                     <div class="transfer-name">${transfer.name}</div>
                     <div class="transfer-details">
                         <span>${transfer.bank} ${transfer.accountNumber}</span>
                         <span>${new Intl.NumberFormat('ko-KR').format(transfer.lastAmount)}원 (${transfer.date})</span>
                     </div>
-                </div>
-            `).join('');
+                    ${memoHtml}
+                </div>`;
+            }).join('');
+            
+            console.log('최종 HTML:', html);
+            container.innerHTML = html;
         }
 
         // 은행 데이터 초기화
@@ -1329,20 +1407,39 @@
             accountsList.classList.toggle('show');
         }
 
-        // 내 계좌 선택
-        function selectMyAccount(accountNumber, bank) {
-            document.getElementById('accountInput').value = `${accountNumber} (${bank})`;
-            toggleMyAccounts();
-            
-            // 다음 단계 버튼 표시
-            document.getElementById('nextStepSection').style.display = 'block';
-            
-            selectedAccountInfo = {
+        // 송금 계좌 선택
+        function selectSenderAccount(accountNumber, accountName, balance) {
+            selectedSenderAccount = {
                 accountNumber: accountNumber,
-                bank: bank
+                accountName: accountName,
+                balance: balance
             };
             
-            console.log('내 계좌 선택:', selectedAccountInfo);
+            // 선택한 계좌 정보 표시
+            updateSenderAccountDisplay();
+            toggleMyAccounts();
+            
+            console.log('송금 계좌 선택:', selectedSenderAccount);
+        }
+        
+        // 선택한 송금 계좌 정보 표시 업데이트
+        function updateSenderAccountDisplay() {
+            if (selectedSenderAccount.accountNumber) {
+                // 잔액 카드 업데이트
+                const balanceCard = document.getElementById('balanceCard');
+                const currentBalance = document.getElementById('currentBalance');
+                const currentAccount = document.getElementById('currentAccount');
+                
+                currentBalance.textContent = new Intl.NumberFormat('ko-KR').format(selectedSenderAccount.balance) + '원';
+                currentAccount.textContent = `${selectedSenderAccount.accountName}: ${selectedSenderAccount.accountNumber}`;
+                
+                // 잔액에 따른 카드 색상 변경
+                const tier = getBalanceTier(selectedSenderAccount.balance);
+                balanceCard.classList.remove('tier-1', 'tier-2', 'tier-3', 'tier-4', 'tier-vip');
+                balanceCard.classList.add(tier);
+                
+                console.log('선택된 계좌 정보로 UI 업데이트 완료');
+            }
         }
 
         // 최근 송금 내역에서 선택
@@ -1355,7 +1452,8 @@
             selectedAccountInfo = {
                 accountNumber: accountNumber,
                 bank: bank,
-                name: name
+                accountHolderName: name,
+                isVerified: true  // 최근 송금 내역은 이미 검증된 계좌
             };
             
             console.log('최근 송금 선택:', selectedAccountInfo);
@@ -1563,10 +1661,28 @@
         // 송금 정보 입력 모달 열기
         function openTransferInfoModal() {
             if (!selectedAccountInfo.accountNumber) {
-                alert('먼저 계좌를 선택해주세요.');
+                alert('먼저 받을 계좌를 선택해주세요.');
                 return;
             }
+            
+            // 송금 계좌가 선택되지 않은 경우 기본 계좌 사용
+            if (!selectedSenderAccount.accountNumber) {
+                // 주계좌를 기본 송금 계좌로 설정
+                const primaryAccount = myAccounts.find(acc => acc.isPrimary) || myAccounts[0];
+                if (primaryAccount) {
+                    selectedSenderAccount = {
+                        accountNumber: primaryAccount.accountNumber,
+                        accountName: primaryAccount.accountName,
+                        balance: primaryAccount.balance
+                    };
+                }
+            }
 
+            // 송금 계좌 정보 표시
+            document.getElementById('senderAccountName').textContent = selectedSenderAccount.accountName || 'EasyPay 계좌';
+            document.getElementById('senderAccountNumber').textContent = selectedSenderAccount.accountNumber;
+            document.getElementById('senderAccountBalance').textContent = new Intl.NumberFormat('ko-KR').format(selectedSenderAccount.balance) + '원';
+            
             // 받는 계좌 정보 표시
             document.getElementById('recipientAccountNumber').textContent = selectedAccountInfo.accountNumber;
             document.getElementById('recipientBankName').textContent = selectedAccountInfo.bank;
@@ -1574,12 +1690,12 @@
 
             // 입력 필드 기본값 설정
             document.getElementById('modalSenderName').value = currentUser?.name || '';
-            document.getElementById('modalReceiverDisplay').value = selectedAccountInfo.accountHolderName || '';
+            document.getElementById('modalReceiverDisplay').value = selectedAccountInfo.accountHolderName || selectedAccountInfo.name || '';
             document.getElementById('modalAmount').value = '';
             document.getElementById('modalMemo').value = '';
             
             document.getElementById('transferInfoModal').style.display = 'flex';
-            console.log('송금 정보 입력 모달 열림:', selectedAccountInfo);
+            console.log('송금 정보 입력 모달 열림 - 송금계좌:', selectedSenderAccount, '수신계좌:', selectedAccountInfo);
         }
 
         // 빠른 금액 선택
@@ -1688,7 +1804,10 @@
                 return;
             }
             
-            if (parseFloat(amount) < 1000) {
+            // 콤마 제거하고 숫자로 변환
+            const numericAmount = parseInt(amount.replace(/,/g, ''), 10);
+            
+            if (isNaN(numericAmount) || numericAmount < 1000) {
                 alert('최소 송금 금액은 1,000원입니다.');
                 return;
             }
@@ -1719,7 +1838,7 @@
             }
             
             try {
-                const response = await fetch('/pin/verify', {
+                const response = await fetch('/api/pin/verify', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1753,9 +1872,12 @@
             const amount = document.getElementById('modalAmount').value.trim();
             const memo = document.getElementById('modalMemo').value.trim();
             
+            // 콤마 제거하고 숫자로 변환
+            const numericAmount = parseInt(amount.replace(/,/g, ''), 10);
+            
             document.getElementById('finalReceiverName').textContent = senderName;
             document.getElementById('finalReceiverAccount').textContent = `${selectedAccountInfo.bank} ${selectedAccountInfo.accountNumber}`;
-            document.getElementById('finalAmount').textContent = `${new Intl.NumberFormat('ko-KR').format(amount)}원`;
+            document.getElementById('finalAmount').textContent = `${new Intl.NumberFormat('ko-KR').format(numericAmount)}원`;
             document.getElementById('finalMemo').textContent = memo || '메모 없음';
             
             document.getElementById('finalConfirmModal').style.display = 'flex';
@@ -1777,8 +1899,11 @@
             const amount = document.getElementById('modalAmount').value.trim();
             const memo = document.getElementById('modalMemo').value.trim();
             
+            // 콤마 제거하고 숫자로 변환
+            const numericAmount = parseInt(amount.replace(/,/g, ''), 10);
+            
             try {
-                const response = await fetch('/transfers/secure', {
+                const response = await fetch('/api/transfers/secure', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1786,7 +1911,8 @@
                     },
                     body: JSON.stringify({
                         receiverAccountNumber: selectedAccountInfo.accountNumber,
-                        amount: parseFloat(amount),
+                        senderAccountNumber: selectedSenderAccount.accountNumber, // 선택한 송금 계좌 추가
+                        amount: numericAmount,
                         memo: memo,
                         pinSessionToken: pinSessionToken
                     })
@@ -1796,7 +1922,7 @@
                 
                 if (result.success) {
                     closeFinalConfirmModal();
-                    alert(`송금이 완료되었습니다!\n받는 사람: ${document.getElementById('modalSenderName').value}\n송금액: ${new Intl.NumberFormat('ko-KR').format(amount)}원`);
+                    alert(`송금이 완료되었습니다!\n받는 사람: ${document.getElementById('modalSenderName').value}\n송금액: ${new Intl.NumberFormat('ko-KR').format(numericAmount)}원`);
                     
                     // 상태 초기화
                     resetTransferState();

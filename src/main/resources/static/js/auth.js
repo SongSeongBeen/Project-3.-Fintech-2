@@ -72,7 +72,7 @@ async function handleLogin(e) {
     loading.classList.add('show');
     
     try {
-        const response = await fetch('/auth/login', {
+        const response = await fetch('/api/auth/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -199,7 +199,7 @@ async function handleRegister(e) {
     loading.classList.add('show');
     
     try {
-        const response = await fetch('/auth/register', {
+        const response = await fetch('/api/auth/register', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -255,7 +255,7 @@ async function checkEmailDuplicate() {
     }
     
     try {
-        const response = await fetch(`/auth/check-email?email=${encodeURIComponent(email)}`, {
+        const response = await fetch(`/api/auth/check-email?email=${encodeURIComponent(email)}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -305,7 +305,7 @@ async function checkPhoneDuplicate() {
     }
     
     try {
-        const response = await fetch(`/auth/check-phone?phoneNumber=${encodeURIComponent(phoneNumber)}`, {
+        const response = await fetch(`/api/auth/check-phone?phoneNumber=${encodeURIComponent(phoneNumber)}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
