@@ -56,83 +56,65 @@ class CelebrityIntegrationTest {
     @BeforeEach
     void setUp() {
         // Given: 한국 연예인 가상 사용자 데이터 생성
-        parkBoGum = new User(
-            1L,
-            "010-1234-1234",
-            "encodedPasswordBogum",
-            "박보검",
-            LocalDateTime.now().minusYears(5),
-            "VA1234123412",
-            0,
-            false,
-            null,
-            null
-        );
+        parkBoGum = User.builder()
+                .id(1L)
+                .phoneNumber("010-1234-1234")
+                .email("parkbogum@example.com")
+                .password("encodedPasswordBogum")
+                .name("박보검")
+                .createdAt(LocalDateTime.now().minusYears(5))
+                .accountNumber("VA1234123412")
+                .build();
 
-        shinSeKyung = new User(
-            2L,
-            "010-5678-5678", 
-            "encodedPasswordSeKyung",
-            "신세경",
-            LocalDateTime.now().minusYears(7),
-            "VA5678567856",
-            0,
-            false,
-            null,
-            null
-        );
+        shinSeKyung = User.builder()
+                .id(2L)
+                .phoneNumber("010-5678-5678")
+                .email("shinsekyung@example.com")
+                .password("encodedPasswordSeKyung")
+                .name("신세경")
+                .createdAt(LocalDateTime.now().minusYears(7))
+                .accountNumber("VA5678567856")
+                .build();
 
-        chaEunWoo = new User(
-            3L,
-            "010-9999-1111",
-            "encodedPasswordEunWoo",
-            "차은우",
-            LocalDateTime.now().minusYears(3),
-            "VA9999111199",
-            0,
-            false,
-            null,
-            null
-        );
+        chaEunWoo = User.builder()
+                .id(3L)
+                .phoneNumber("010-9999-1111")
+                .email("chaeunwoo@example.com")
+                .password("encodedPasswordEunWoo")
+                .name("차은우")
+                .createdAt(LocalDateTime.now().minusYears(3))
+                .accountNumber("VA9999111199")
+                .build();
 
-        karina = new User(
-            4L,
-            "010-1111-9999",
-            "encodedPasswordKarina", 
-            "카리나",
-            LocalDateTime.now().minusYears(2),
-            "VA1111999911",
-            0,
-            false,
-            null,
-            null
-        );
+        karina = User.builder()
+                .id(4L)
+                .phoneNumber("010-1111-9999")
+                .email("karina@example.com")
+                .password("encodedPasswordKarina")
+                .name("카리나")
+                .createdAt(LocalDateTime.now().minusYears(2))
+                .accountNumber("VA1111999911")
+                .build();
 
-        kimSeonHo = new User(
-            5L,
-            "010-7777-8888",
-            "encodedPasswordSeonHo",
-            "김선호",
-            LocalDateTime.now().minusYears(4),
-            "VA7777888877",
-            0,
-            false,
-            null,
-            null
-        );
+        kimSeonHo = User.builder()
+                .id(5L)
+                .phoneNumber("010-7777-8888")
+                .email("kimseonho@example.com")
+                .password("encodedPasswordSeonHo")
+                .name("김선호")
+                .createdAt(LocalDateTime.now().minusYears(4))
+                .accountNumber("VA7777888877")
+                .build();
 
-        suzy = new User(
-            6L,
-            "010-2222-3333",
-            "encodedPasswordSuzy",
-            "수지",
-            LocalDateTime.now().minusYears(6),
-            "VA2222333322",
-            0,
-            false,
-            null,
-            null
-        );
+        suzy = User.builder()
+                .id(6L)
+                .phoneNumber("010-2222-3333")
+                .email("suzy@example.com")
+                .password("encodedPasswordSuzy")
+                .name("수지")
+                .createdAt(LocalDateTime.now().minusYears(6))
+                .accountNumber("VA2222333322")
+                .build();
 
         // Given: 연예인 계좌 데이터 생성 (연예인답게 높은 잔액)
         parkBoGumAccount = Account.builder()

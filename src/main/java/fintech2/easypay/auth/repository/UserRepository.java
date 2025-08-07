@@ -11,10 +11,13 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByPhoneNumber(String phoneNumber);
+    Optional<User> findByEmail(String email);
+    Optional<User> findByName(String name);
     
     // username을 phoneNumber로 매핑 (payment/transfer 모듈 호환성을 위해)
     @Query("SELECT u FROM User u WHERE u.phoneNumber = :username")
     Optional<User> findByUsername(@Param("username") String username);
     
     boolean existsByPhoneNumber(String phoneNumber);
+    boolean existsByEmail(String email);
 } 

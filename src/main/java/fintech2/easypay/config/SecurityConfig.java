@@ -52,6 +52,8 @@ public class SecurityConfig {
                 .requestMatchers("/payments/**").authenticated()
                 // 송금 관련 API (JWT 인증 필요)
                 .requestMatchers("/transfers/**").authenticated()
+                // PIN 관련 API (JWT 인증 필요)
+                .requestMatchers("/pin/**").authenticated()
                 // 알림 관련 API (JWT 인증 필요)
                 .requestMatchers("/alarms/**").authenticated()
                 // 나머지 모든 요청은 인증 필요
