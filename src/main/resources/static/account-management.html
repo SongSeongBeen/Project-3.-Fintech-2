@@ -723,6 +723,9 @@
                         </div>
                     </div>
                     <div class="account-actions">
+                        <button class="btn btn-primary" onclick="depositToAccount('${account.accountNumber}', '${account.accountName}')">
+                            충전
+                        </button>
                         <button class="btn btn-secondary" onclick="editAccountName('${account.accountNumber}', '${account.accountName}', 'easypay')">
                             이름 변경
                         </button>
@@ -830,6 +833,60 @@
         // 새 EasyPay 계좌 생성 모달 닫기
         function closeNewAccountModal() {
             document.getElementById('newAccountModal').style.display = 'none';
+        }
+
+        // 계좌 충전 함수
+        async function depositToAccount(accountNumber, accountName) {
+            const amount = prompt(`${accountName} 계좌에 충전할 금액을 입력하세요 (원):`);
+            
+            if (!amount || isNaN(amount) || amount <= 0) {
+                if (amount !== null) { // 취소가 아닌 경우에만 알림
+                    customAlert('올바른 금액을 입력해주세요.');
+                }
+                return;
+            }
+            
+            const numericAmount = parseInt(amount);
+            if (numericAmount < 1000) {
+                customAlert('최소 충전 금액은 1,000원입니다.');
+                return;
+            }
+            
+            const token = localStorage.getItem('accessToken');
+            
+            try {
+                const response = await fetch('/api/accounts/deposit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        accountNumber: accountNumber,
+                        amount: numericAmount,
+                        memo: `${accountName} 계좌 충전`
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success || response.ok) {
+                    customAlert(`${new Intl.NumberFormat('ko-KR').format(numericAmount)}원이 충전되었습니다!`);
+                    
+                    // 계좌 목록 새로고침
+                    loadEasyPayAccounts();
+                    
+                    // 전역 잔액 업데이트 이벤트 발생
+                    window.dispatchEvent(new CustomEvent('accountBalanceUpdated'));
+                    
+                    console.log('충전 완료 및 이벤트 발생:', { accountNumber, amount: numericAmount });
+                } else {
+                    customAlert(result.message || '충전에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('충전 오류:', error);
+                customAlert('충전 중 오류가 발생했습니다.');
+            }
         }
 
         // 새 EasyPay 계좌 생성
