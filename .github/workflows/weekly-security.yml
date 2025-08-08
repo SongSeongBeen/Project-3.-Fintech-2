@@ -1,0 +1,62 @@
+name: Weekly Security Scan
+
+on:
+  schedule:
+    # 매주 일요일 저녁 6시 (UTC)
+    - cron: '0 18 * * 0'
+  workflow_dispatch:  # 수동 실행 가능
+
+env:
+  JAVA_VERSION: '21'
+
+jobs:
+  # 주간 보안 스캔
+  weekly-security-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK ${{ env.JAVA_VERSION }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        cache: 'gradle'
+        
+    - name: Cache Gradle packages
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
+    - name: Run OWASP dependency check
+      run: ./gradlew dependencyCheckAnalyze
+      
+    - name: Upload security results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: weekly-security-results
+        path: build/reports/dependency-check/
+        retention-days: 90  # 주간 결과는 90일 보관
+
+  # 주간 보안 스캔 요약
+  security-summary:
+    runs-on: ubuntu-latest
+    needs: [weekly-security-scan]
+    
+    steps:
+    - name: Weekly Security Summary
+      run: |
+        echo "🔒 Weekly Security Scan Completed!"
+        echo "📅 Scan Date: $(date)"
+        echo "📊 Security Results: Available in artifacts"
+        echo "📋 Check: build/reports/dependency-check/"
+        echo "💡 This scan runs every Sunday at 6 PM UTC"
+        echo "🔧 Manual trigger available via workflow_dispatch" 

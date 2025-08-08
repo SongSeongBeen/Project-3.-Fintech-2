@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>EasyPay - 결제하기</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <script defer src="/js/common.js"></script>
+    <style>
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .payment-form {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            -webkit-appearance: none;
+            -moz-appearance: textfield;
+        }
+        
+        /* 숫자 입력 필드의 스피너 제거 */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        .amount-input {
+            position: relative;
+        }
+        
+        .amount-input input {
+            padding-right: 40px;
+        }
+        
+        .amount-input::after {
+            content: '원';
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-weight: 600;
+            pointer-events: none;
+        }
+        
+        .payment-method {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .payment-method-btn {
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .payment-method-btn.active {
+            border-color: #667eea;
+            background: #f8f9ff;
+            color: #667eea;
+        }
+        
+        .payment-method-btn:hover {
+            border-color: #667eea;
+        }
+        
+        .card-info {
+            display: none;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .card-info.active {
+            display: block;
+        }
+        
+        .btn-primary {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            width: 100%;
+            padding: 15px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .current-balance {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .balance-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            color: #666;
+            margin: 20px 0;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .merchant-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .merchant-info h3 {
+            margin: 0 0 10px 0;
+            color: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>결제하기</h1>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-small" onclick="goBack()">뒤로가기</button>
+            </div>
+        </div>
+
+        <div class="payment-form">
+            <div class="current-balance">
+                <div>현재 잔액</div>
+                <div class="balance-amount" id="currentBalance">로딩 중...</div>
+            </div>
+
+            <div class="merchant-info">
+                <h3>가맹점 정보</h3>
+                <div>결제를 진행할 가맹점 정보를 입력하세요.</div>
+            </div>
+
+            <form id="paymentForm">
+                <div class="form-group">
+                    <label for="merchantId">가맹점 ID</label>
+                    <input type="text" id="merchantId" name="merchantId" 
+                           placeholder="가맹점 ID를 입력하세요" required>
+                    <div class="error" id="merchantError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="merchantName">가맹점명</label>
+                    <input type="text" id="merchantName" name="merchantName" 
+                           placeholder="가맹점명을 입력하세요" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="amount">결제 금액</label>
+                    <div class="amount-input">
+                        <input type="text" id="amount" name="amount" 
+                               placeholder="결제할 금액을 입력하세요" required>
+                    </div>
+                    <div class="error" id="amountError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>결제 수단</label>
+                    <div class="payment-method">
+                        <div class="payment-method-btn active" data-method="CARD" onclick="selectPaymentMethod('CARD', event)">
+                            카드결제
+                        </div>
+                        <div class="payment-method-btn" data-method="BALANCE" onclick="selectPaymentMethod('BALANCE', event)">
+                            잔액결제
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-info active" id="cardInfo">
+                    <div class="form-group">
+                        <label for="cardNumber">카드번호</label>
+                        <input type="text" id="cardNumber" name="cardNumber" 
+                               placeholder="1234-5678-9012-3456" maxlength="19">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cardExpiryDate">유효기간</label>
+                            <input type="text" id="cardExpiryDate" name="cardExpiryDate" 
+                                   placeholder="MM/YY" maxlength="5">
+                        </div>
+                        <div class="form-group">
+                            <label for="cardCvv">CVV</label>
+                            <input type="text" id="cardCvv" name="cardCvv" 
+                                   placeholder="123" maxlength="3">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="memo">결제 메모 (선택)</label>
+                    <textarea id="memo" name="memo" rows="3" 
+                              placeholder="결제 목적을 입력하세요 (최대 100자)"></textarea>
+                </div>
+
+                <div class="loading" id="loading">
+                    결제 처리 중
+                </div>
+
+                <button type="submit" class="btn-primary" id="submitBtn">
+                    결제하기
+                </button>
+                
+                <button type="button" class="btn-secondary" onclick="goBack()">
+                    취소
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let selectedPaymentMethod = 'CARD';
+
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 서버에서 클라이언트 설정 로드
+            await loadClientConfig();
+            
+            // 서버 설정을 사용한 토큰 체크 시작
+            setInterval(checkTokenExpiration, clientConfig.accessCheckInterval);
+            setInterval(backgroundTokenCheck, clientConfig.backgroundCheckInterval);
+            
+            // 초기 토큰 체크는 즉시 실행
+            checkTokenExpiration();
+            backgroundTokenCheck();
+            
+            checkAuth();
+            loadBalance();
+            
+            // 폼 제출 이벤트
+            document.getElementById('paymentForm').addEventListener('submit', handlePayment);
+            
+            // 카드번호 자동 포맷팅
+            document.getElementById('cardNumber').addEventListener('input', formatCardNumber);
+            document.getElementById('cardExpiryDate').addEventListener('input', formatExpiryDate);
+            
+            // 금액 입력 필드에 포맷팅 이벤트 추가
+            document.getElementById('amount').addEventListener('input', formatCurrency);
+            document.getElementById('amount').addEventListener('blur', validateAmount);
+        });
+
+        // 인증 확인
+        function checkAuth() {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                window.location.href = '/index.html';
+            }
+        }
+
+        // 잔액 조회
+        async function loadBalance() {
+            const token = localStorage.getItem('accessToken');
+            
+            try {
+                const response = await fetch('/api/accounts', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const balance = data.balance || 0;
+                    document.getElementById('currentBalance').textContent = 
+                        new Intl.NumberFormat('ko-KR').format(balance) + '원';
+                } else {
+                    console.error('Balance load failed:', response.status);
+                    document.getElementById('currentBalance').textContent = '조회 실패';
+                }
+            } catch (error) {
+                console.error('Balance load error:', error);
+                document.getElementById('currentBalance').textContent = '조회 실패';
+            }
+        }
+
+        // 결제 수단 선택
+        function selectPaymentMethod(method, event) {
+            selectedPaymentMethod = method;
+            
+            // 버튼 상태 업데이트
+            document.querySelectorAll('.payment-method-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 클릭된 버튼에 active 클래스 추가
+            const clickedBtn = event ? event.currentTarget : document.querySelector(`[data-method="${method}"]`);
+            if (clickedBtn) {
+                clickedBtn.classList.add('active');
+            }
+            
+            // 카드 정보 입력 필드 표시/숨김
+            const cardInfo = document.getElementById('cardInfo');
+            if (method === 'CARD') {
+                cardInfo.classList.add('active');
+            } else {
+                cardInfo.classList.remove('active');
+            }
+        }
+
+        // 카드번호 포맷팅
+        function formatCardNumber(event) {
+            let value = event.target.value.replace(/\D/g, '');
+            value = value.replace(/(\d{4})(?=\d)/g, '$1-');
+            event.target.value = value;
+        }
+
+        // 유효기간 포맷팅
+        function formatExpiryDate(event) {
+            let value = event.target.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            }
+            event.target.value = value;
+        }
+
+        // 결제 처리
+        async function handlePayment(event) {
+            event.preventDefault();
+            
+            // 에러 메시지 초기화
+            document.getElementById('merchantError').textContent = '';
+            document.getElementById('amountError').textContent = '';
+            
+            const merchantId = document.getElementById('merchantId').value;
+            const merchantName = document.getElementById('merchantName').value;
+            const amountValue = document.getElementById('amount').value.replace(/[^0-9]/g, '');
+            const amount = parseInt(amountValue);
+            const memo = document.getElementById('memo').value;
+            
+            // 유효성 검사
+            if (!merchantId || merchantId.length < 3) {
+                document.getElementById('merchantError').textContent = '올바른 가맹점 ID를 입력하세요.';
+                return;
+            }
+            
+            if (!amount || amount < 100) {
+                document.getElementById('amountError').textContent = '최소 결제 금액은 100원입니다.';
+                return;
+            }
+            
+            if (amount > 1000000) {
+                document.getElementById('amountError').textContent = '최대 결제 금액은 1,000,000원입니다.';
+                return;
+            }
+
+            // 카드 결제 시 카드 정보 검증
+            let paymentData = {
+                merchantId: merchantId,
+                merchantName: merchantName,
+                amount: amount,
+                paymentMethod: selectedPaymentMethod,
+                memo: memo || '결제'
+            };
+
+            if (selectedPaymentMethod === 'CARD') {
+                const cardNumber = document.getElementById('cardNumber').value.replace(/\D/g, '');
+                const cardExpiryDate = document.getElementById('cardExpiryDate').value;
+                const cardCvv = document.getElementById('cardCvv').value;
+                
+                if (!cardNumber || cardNumber.length !== 16) {
+                    alert('올바른 카드번호를 입력하세요.');
+                    return;
+                }
+                
+                if (!cardExpiryDate || cardExpiryDate.length !== 5) {
+                    alert('올바른 유효기간을 입력하세요.');
+                    return;
+                }
+                
+                if (!cardCvv || cardCvv.length !== 3) {
+                    alert('올바른 CVV를 입력하세요.');
+                    return;
+                }
+                
+                paymentData.cardNumber = cardNumber;
+                paymentData.cardExpiryDate = cardExpiryDate;
+                paymentData.cardCvv = cardCvv;
+            }
+
+            // UI 업데이트
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('submitBtn').disabled = true;
+
+            const token = localStorage.getItem('accessToken');
+            
+            try {
+                // amount를 문자열로 변환
+                paymentData.amount = paymentData.amount.toString();
+                
+                console.log('결제 요청 데이터:', paymentData);
+                
+                const response = await fetch('/api/payments', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(paymentData)
+                });
+
+                console.log('결제 응답 상태:', response.status);
+                
+                let data;
+                try {
+                    data = await response.json();
+                    console.log('결제 응답 데이터:', data);
+                } catch (jsonError) {
+                    console.error('JSON 파싱 실패:', jsonError);
+                    const text = await response.text();
+                    console.log('응답 텍스트:', text);
+                    throw new Error('서버 응답을 해석할 수 없습니다.');
+                }
+
+                if (response.ok) {
+                    alert(`결제가 완료되었습니다!\n결제액: ${new Intl.NumberFormat('ko-KR').format(amount)}원\n가맹점: ${merchantName}`);
+                    window.location.href = '/main.html';
+                } else {
+                    let errorMessage = '결제에 실패했습니다.';
+                    if (data.message) {
+                        errorMessage = data.message;
+                    } else if (data.error === 'INSUFFICIENT_BALANCE') {
+                        errorMessage = '잔액이 부족합니다.';
+                    } else if (data.error === 'INVALID_PAYMENT_AMOUNT') {
+                        errorMessage = '결제 금액이 올바르지 않습니다.';
+                    } else if (data.error === 'INVALID_MERCHANT_INFO') {
+                        errorMessage = '가맹점 정보가 올바르지 않습니다.';
+                    }
+                    console.error('결제 실패:', errorMessage);
+                    alert(`결제 실패: ${errorMessage}\n상태 코드: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Payment error:', error);
+                alert(`결제 처리 중 오류가 발생했습니다.\n에러: ${error.message}`);
+            } finally {
+                // UI 복원
+                document.getElementById('loading').classList.remove('show');
+                document.getElementById('submitBtn').disabled = false;
+            }
+        }
+
+        // 뒤로가기
+        function goBack() {
+            window.location.href = '/main.html';
+        }
+        
+        // 통화 포맷팅 함수
+        function formatCurrency(event) {
+            let value = event.target.value;
+            
+            // 숫자가 아닌 문자 제거
+            value = value.replace(/[^0-9]/g, '');
+            
+            // 콤마 추가
+            if (value) {
+                value = parseInt(value).toLocaleString('ko-KR');
+            }
+            
+            event.target.value = value;
+        }
+        
+        // 백그라운드 토큰 체크
+        async function backgroundTokenCheck() {
+            const accessToken = localStorage.getItem('accessToken');
+            const refreshToken = localStorage.getItem('refreshToken');
+            
+            if (!accessToken || !refreshToken) {
+                return;
+            }
+
+            try {
+                const payload = JSON.parse(atob(accessToken.split('.')[1]));
+                const expirationTime = payload.exp * 1000;
+                const currentTime = Date.now();
+                
+                // 만료되었거나 곧 만료될 예정이면 갱신 시도
+                if (currentTime >= expirationTime || (expirationTime - currentTime < 60000)) {
+                    console.log('🔄 결제 페이지 백그라운드 토큰 갱신 시도...');
+                    const success = await window.refreshToken(); // common.js의 함수 사용
+                    if (!success) {
+                        console.log('❌ 백그라운드 토큰 갱신 실패, 로그아웃');
+                        showAutoLogoutPopup();
+                    }
+                }
+            } catch (error) {
+                console.error('백그라운드 토큰 체크 오류:', error);
+                showAutoLogoutPopup();
+            }
+        }
+
+        // 금액 유효성 검사
+        function validateAmount() {
+            const input = document.getElementById('amount');
+            const value = input.value.replace(/[^0-9]/g, '');
+            const amount = parseInt(value) || 0;
+            
+            if (value && amount < 100) {
+                document.getElementById('amountError').textContent = '최소 결제 금액은 100원입니다.';
+            } else if (value && amount > 1000000) {
+                document.getElementById('amountError').textContent = '최대 결제 금액은 1,000,000원입니다.';
+            } else {
+                document.getElementById('amountError').textContent = '';
+            }
+        }
+    </script>
+</body>
+</html>

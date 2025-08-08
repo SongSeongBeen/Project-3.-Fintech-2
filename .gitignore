@@ -1,3 +1,4 @@
+# Spring Boot specific
 HELP.md
 .gradle
 build/
@@ -35,3 +36,63 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Logs ###
+*.log
+logs/
+
+### Runtime data ###
+pids
+*.pid
+*.seed
+*.pid.lock
+
+### Coverage directory used by tools like istanbul ###
+coverage/
+
+### Dependency directories ###
+node_modules/
+
+### Optional npm cache directory ###
+.npm
+
+### Optional REPL history ###
+.node_repl_history
+
+### Output of 'npm pack' ###
+*.tgz
+
+### Yarn Integrity file ###
+.yarn-integrity
+
+### dotenv environment variables file ###
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+### OS Specific ###
+.DS_Store       # macOS
+Thumbs.db       # Windows
+ehthumbs.db
+Desktop.ini
+
+### Application specific ###
+application-prod.yml
+application-local.yml
+*.db
+*.h2.db
+
+### Temporary files ###
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+### IDE specific ###
+*.sublime-project
+*.sublime-workspace
+
+
