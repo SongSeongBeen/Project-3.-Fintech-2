@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -34,6 +35,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 @DisplayName("송금 서비스 가상 사용자 시나리오 테스트")
 class TransferServiceScenarioTest {
 
@@ -45,6 +47,7 @@ class TransferServiceScenarioTest {
     @Mock private BankingApiService bankingApiService;
     @Mock private BalanceService balanceService;
     @Mock private ApplicationContext applicationContext;
+    @Mock private fintech2.easypay.account.service.UserAccountService userAccountService;
 
     private TransferService transferService;
 
@@ -62,6 +65,10 @@ class TransferServiceScenarioTest {
 
     @BeforeEach
     void setUp() {
+        // ApplicationContext에서 UserAccountService 반환 설정
+        when(applicationContext.getBean(fintech2.easypay.account.service.UserAccountService.class))
+            .thenReturn(userAccountService);
+            
         // Given: TransferService 생성자 주입으로 초기화
         transferService = new TransferService(
             transferRepository,
@@ -184,6 +191,15 @@ class TransferServiceScenarioTest {
         when(userRepository.findByPhoneNumber("010-1111-1111")).thenReturn(Optional.of(alice));
         when(accountRepository.findByAccountNumber("VA2222222222")).thenReturn(Optional.of(bobAccount));
         when(userRepository.findById(2L)).thenReturn(Optional.of(bob));
+        
+        // UserAccountService Mock 설정 추가
+        fintech2.easypay.account.entity.UserAccount primaryUserAccount = fintech2.easypay.account.entity.UserAccount.builder()
+            .accountNumber("VA1111111111")
+            .isPrimary(true)
+            .build();
+        when(userAccountService.getPrimaryAccount(1L)).thenReturn(Optional.of(primaryUserAccount));
+        when(accountRepository.findByAccountNumber("VA1111111111")).thenReturn(Optional.of(aliceAccount));
+        
         when(accountRepository.findByUserId(1L)).thenReturn(Optional.of(aliceAccount));
         when(accountRepository.findByIdWithLock(1L)).thenReturn(Optional.of(aliceAccount));
         when(accountRepository.findByIdWithLock(2L)).thenReturn(Optional.of(bobAccount));
@@ -241,6 +257,15 @@ class TransferServiceScenarioTest {
         when(userRepository.findByPhoneNumber("010-2222-2222")).thenReturn(Optional.of(bob));
         when(accountRepository.findByAccountNumber("VA3333333333")).thenReturn(Optional.of(charlieAccount));
         when(userRepository.findById(3L)).thenReturn(Optional.of(charlie));
+        
+        // UserAccountService Mock 설정 추가
+        fintech2.easypay.account.entity.UserAccount primaryUserAccount = fintech2.easypay.account.entity.UserAccount.builder()
+            .accountNumber("VA2222222222")
+            .isPrimary(true)
+            .build();
+        when(userAccountService.getPrimaryAccount(2L)).thenReturn(Optional.of(primaryUserAccount));
+        when(accountRepository.findByAccountNumber("VA2222222222")).thenReturn(Optional.of(bobAccount));
+        
         when(accountRepository.findByUserId(2L)).thenReturn(Optional.of(bobAccount));
         when(accountRepository.findByIdWithLock(2L)).thenReturn(Optional.of(bobAccount));
         when(accountRepository.findByIdWithLock(3L)).thenReturn(Optional.of(charlieAccount));
@@ -317,6 +342,15 @@ class TransferServiceScenarioTest {
         when(userRepository.findByPhoneNumber("010-3333-3333")).thenReturn(Optional.of(charlie));
         when(accountRepository.findByAccountNumber("VA1111111111")).thenReturn(Optional.of(aliceAccount));
         when(userRepository.findById(1L)).thenReturn(Optional.of(alice));
+        
+        // UserAccountService Mock 설정 추가
+        fintech2.easypay.account.entity.UserAccount primaryUserAccount = fintech2.easypay.account.entity.UserAccount.builder()
+            .accountNumber("VA3333333333")
+            .isPrimary(true)
+            .build();
+        when(userAccountService.getPrimaryAccount(3L)).thenReturn(Optional.of(primaryUserAccount));
+        when(accountRepository.findByAccountNumber("VA3333333333")).thenReturn(Optional.of(charlieAccount));
+        
         when(accountRepository.findByUserId(3L)).thenReturn(Optional.of(charlieAccount));
         when(accountRepository.findByIdWithLock(3L)).thenReturn(Optional.of(charlieAccount));
         when(accountRepository.findByIdWithLock(1L)).thenReturn(Optional.of(aliceAccount));
@@ -369,6 +403,15 @@ class TransferServiceScenarioTest {
         when(userRepository.findByPhoneNumber("010-2222-2222")).thenReturn(Optional.of(bob));
         when(accountRepository.findByAccountNumber("VA1111111111")).thenReturn(Optional.of(aliceAccount));
         when(userRepository.findById(1L)).thenReturn(Optional.of(alice));
+        
+        // UserAccountService Mock 설정 추가
+        fintech2.easypay.account.entity.UserAccount primaryUserAccount = fintech2.easypay.account.entity.UserAccount.builder()
+            .accountNumber("VA2222222222")
+            .isPrimary(true)
+            .build();
+        when(userAccountService.getPrimaryAccount(2L)).thenReturn(Optional.of(primaryUserAccount));
+        when(accountRepository.findByAccountNumber("VA2222222222")).thenReturn(Optional.of(bobAccount));
+        
         when(accountRepository.findByUserId(2L)).thenReturn(Optional.of(bobAccount));
         when(accountRepository.findByIdWithLock(2L)).thenReturn(Optional.of(bobAccount));
         when(accountRepository.findByIdWithLock(1L)).thenReturn(Optional.of(aliceAccount));
