@@ -94,13 +94,15 @@ class AuthControllerTest {
     @DisplayName("로그아웃 성공 테스트")
     void logoutSuccessTest() {
         // Given
-        TokenRefreshRequest request = new TokenRefreshRequest();
-        request.setRefreshToken("token-to-revoke");
+        Authentication authentication = mock(Authentication.class);
+        fintech2.easypay.auth.dto.UserPrincipal userPrincipal = mock(fintech2.easypay.auth.dto.UserPrincipal.class);
         
-        doNothing().when(tokenService).revokeRefreshToken("token-to-revoke");
+        when(authentication.getPrincipal()).thenReturn(userPrincipal);
+        when(userPrincipal.getId()).thenReturn(1L);
+        doNothing().when(tokenService).revokeAllUserTokens(1L);
 
         // When
-        ResponseEntity<?> response = authController.logout((Authentication) request);
+        ResponseEntity<?> response = authController.logout(authentication);
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -111,21 +113,23 @@ class AuthControllerTest {
         assertThat(responseBody.get("message")).isEqualTo("로그아웃이 완료되었습니다");
 
         // Verify
-        verify(tokenService).revokeRefreshToken("token-to-revoke");
+        verify(tokenService).revokeAllUserTokens(1L);
     }
 
     @Test
     @DisplayName("로그아웃 실패 테스트")
     void logoutFailureTest() {
         // Given
-        TokenRefreshRequest request = new TokenRefreshRequest();
-        request.setRefreshToken("non-existent-token");
+        Authentication authentication = mock(Authentication.class);
+        fintech2.easypay.auth.dto.UserPrincipal userPrincipal = mock(fintech2.easypay.auth.dto.UserPrincipal.class);
         
+        when(authentication.getPrincipal()).thenReturn(userPrincipal);
+        when(userPrincipal.getId()).thenReturn(1L);
         doThrow(new RuntimeException("Token not found"))
-                .when(tokenService).revokeRefreshToken("non-existent-token");
+                .when(tokenService).revokeAllUserTokens(1L);
 
         // When
-        ResponseEntity<?> response = authController.logout((Authentication) request);
+        ResponseEntity<?> response = authController.logout(authentication);
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -136,7 +140,7 @@ class AuthControllerTest {
         assertThat(responseBody.get("error")).isEqualTo("LOGOUT_FAILED");
 
         // Verify
-        verify(tokenService).revokeRefreshToken("non-existent-token");
+        verify(tokenService).revokeAllUserTokens(1L);
     }
 
     @Test
