@@ -25,6 +25,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     checkAuth();
     loadBalance();
     loadTransactionHistory();
+    
+    // 계좌 잔액 업데이트 이벤트 리스너 추가
+    window.addEventListener('accountBalanceUpdated', function() {
+        console.log('계좌 잔액 업데이트 이벤트 수신, 잔액 페이지 새로고침');
+        loadBalance(); // 잔액 새로고침
+        loadTransactionHistory(); // 거래 내역도 새로고침
+    });
 });
 
 // 인증 확인

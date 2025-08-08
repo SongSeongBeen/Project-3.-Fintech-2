@@ -132,6 +132,7 @@
         .balance-info span {
             font-size: 12px;
             opacity: 0.8;
+            color: #ffffff;
         }
 
         .info-separator {
@@ -273,6 +274,12 @@
         .account-item:hover {
             background: #f8f9fa;
         }
+        
+        .account-item.selected {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-left: 3px solid #667eea;
+            padding-left: 12px;
+        }
 
         .account-item:last-child {
             border-bottom: none;
@@ -282,6 +289,10 @@
             font-weight: 500;
             color: #333;
             margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
         }
 
         .account-number {
@@ -1268,15 +1279,26 @@
             checkAuth();
             loadBalance();
             loadUserInfo();
-            loadMyAccounts();
+            await loadMyAccounts(); // await 추가하여 계좌 로드 완료 대기
             loadRecentTransfers();
             initializeBankData();
             
+            // 기본 계좌 자동 선택
+            selectDefaultAccount();
+            
             // 계좌 잔액 업데이트 이벤트 리스너 추가
-            window.addEventListener('accountBalanceUpdated', function() {
+            window.addEventListener('accountBalanceUpdated', async function() {
                 console.log('계좌 잔액 업데이트 이벤트 수신, 송금 페이지 새로고침');
-                loadBalance(); // 잔액 카드 새로고침
-                loadMyAccounts(); // 내 계좌 목록 새로고침
+                await loadMyAccounts(); // 내 계좌 목록 새로고침
+                
+                // 선택된 계좌의 최신 정보로 업데이트
+                if (selectedSenderAccount.accountNumber) {
+                    const updatedAccount = myAccounts.find(acc => acc.accountNumber === selectedSenderAccount.accountNumber);
+                    if (updatedAccount) {
+                        selectedSenderAccount.balance = updatedAccount.balance;
+                        updateSenderAccountDisplay(); // UI 업데이트
+                    }
+                }
             });
             
             // 계좌번호 입력 필드 클릭 이벤트
@@ -1379,32 +1401,45 @@
                     const result = await response.json();
                     const accounts = result.accounts || [];
                     
-                    // 기본 계좌 찾기 (isPrimary가 true인 계좌)
-                    const primaryAccount = accounts.find(account => account.isPrimary);
+                    // 선택된 계좌가 없는 경우에만 기본 계좌 설정
+                    if (!selectedSenderAccount.accountNumber) {
+                        // 기본 계좌 찾기 (isPrimary가 true인 계좌)
+                        const primaryAccount = accounts.find(account => account.isPrimary) || accounts[0];
+                        
+                        if (primaryAccount) {
+                            const balance = primaryAccount.balance || 0;
+                            const accountNumber = primaryAccount.accountNumber || 'N/A';
+                            const accountName = primaryAccount.accountName || '기본계좌';
+                            
+                            console.log('기본 계좌 조회 성공:', { balance, accountNumber, accountName });
+                            
+                            // 기본 계좌를 선택된 송금 계좌로 설정
+                            selectedSenderAccount = {
+                                accountNumber: accountNumber,
+                                accountName: accountName,
+                                balance: balance
+                            };
+                        }
+                    } else {
+                        // 이미 선택된 계좌가 있으면 해당 계좌 정보만 업데이트
+                        const currentAccount = accounts.find(acc => acc.accountNumber === selectedSenderAccount.accountNumber);
+                        if (currentAccount) {
+                            selectedSenderAccount.balance = currentAccount.balance;
+                            selectedSenderAccount.accountName = currentAccount.accountName;
+                        }
+                    }
                     
-                    if (primaryAccount) {
-                        const balance = primaryAccount.balance || 0;
-                        const accountNumber = primaryAccount.accountNumber || 'N/A';
-                        const accountName = primaryAccount.accountName || '기본계좌';
-                        
-                        console.log('기본 계좌 조회 성공:', { balance, accountNumber, accountName });
-                        
-                        // 기본 계좌를 선택된 송금 계좌로 설정
-                        selectedSenderAccount = {
-                            accountNumber: accountNumber,
-                            accountName: accountName,
-                            balance: balance
-                        };
-                        
+                    // UI 업데이트
+                    if (selectedSenderAccount.accountNumber) {
                         // 잔액 표시
                         document.getElementById('currentBalance').textContent = 
-                            new Intl.NumberFormat('ko-KR').format(balance) + '원';
+                            new Intl.NumberFormat('ko-KR').format(selectedSenderAccount.balance) + '원';
                         document.getElementById('currentAccount').textContent = 
-                            `${accountName}: ${accountNumber}`;
+                            `${selectedSenderAccount.accountName}: ${selectedSenderAccount.accountNumber}`;
                         
                         // 잔액에 따른 카드 색상 변경
                         const balanceCard = document.getElementById('balanceCard');
-                        const tier = getBalanceTier(balance);
+                        const tier = getBalanceTier(selectedSenderAccount.balance);
                         
                         // 기존 티어 클래스 제거
                         balanceCard.classList.remove('tier-1', 'tier-2', 'tier-3', 'tier-4', 'tier-vip');
@@ -1526,6 +1561,14 @@
                     
                     document.getElementById('myAccountsCount').textContent = myAccounts.length;
                     renderMyAccounts();
+                    
+                    // 내 계좌 목록 초기 상태 설정 (숨김)
+                    const accountsList = document.getElementById('myAccountsList');
+                    if (accountsList) {
+                        accountsList.style.display = 'none';
+                        accountsList.classList.remove('show');
+                    }
+                    
                     console.log('내 계좌 목록 로드 완료:', myAccounts);
                 } else {
                     console.error('계좌 정보 조회 실패:', response.status);
@@ -1547,16 +1590,24 @@
                 return;
             }
 
-            container.innerHTML = myAccounts.map(account => `
-                <div class="account-item" onclick="selectSenderAccount('${account.accountNumber}', '${account.accountName}', ${account.balance})">
-                    <div class="account-info">
-                        ${account.accountName || account.bank}
-                        ${account.isPrimary ? '<span class="primary-account-label">(주계좌)</span>' : ''}
+            container.innerHTML = myAccounts.map(account => {
+                const isSelected = selectedSenderAccount.accountNumber === account.accountNumber;
+                return `
+                    <div class="account-item ${isSelected ? 'selected' : ''}" 
+                         data-account-number="${account.accountNumber}"
+                         onclick="selectSenderAccount('${account.accountNumber}', '${account.accountName}', ${account.balance})">
+                        <div class="account-info" style="position: relative;">
+                            <span>
+                                ${account.accountName || account.bank}
+                                ${account.isPrimary ? '<span class="primary-account-label" style="margin-left: 5px;">(주계좌)</span>' : ''}
+                            </span>
+                            ${isSelected ? '<span style="position: absolute; right: 0; top: 0; color: #dc3545; font-weight: 600; font-size: 12px;">선택</span>' : ''}
+                        </div>
+                        <div class="account-number">${account.accountNumber} (${new Intl.NumberFormat('ko-KR').format(account.balance)}원)</div>
+                        ${isSelected ? '<div class="account-note">※ 이 계좌로 송금합니다</div>' : ''}
                     </div>
-                    <div class="account-number">${account.accountNumber} (${new Intl.NumberFormat('ko-KR').format(account.balance)}원)</div>
-                    <div class="account-note">※ 이 계좌로 송금합니다</div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         // 최근 송금 내역 로드
@@ -1723,10 +1774,41 @@
         // 내 계좌 목록 토글
         function toggleMyAccounts() {
             const accountsList = document.getElementById('myAccountsList');
-            accountsList.classList.toggle('show');
+            if (accountsList) {
+                // 현재 상태 확인
+                const isShown = accountsList.classList.contains('show');
+                
+                if (isShown) {
+                    // 닫기
+                    accountsList.classList.remove('show');
+                    accountsList.style.display = 'none';
+                } else {
+                    // 열기
+                    accountsList.style.display = 'block';
+                    accountsList.classList.add('show');
+                    // 계좌 목록 다시 렌더링하여 최신 상태 반영
+                    renderMyAccounts();
+                }
+                
+                console.log('내 계좌 목록 토글:', !isShown ? '열림' : '닫힘');
+            } else {
+                console.error('myAccountsList 요소를 찾을 수 없습니다');
+            }
         }
 
         // 송금 계좌 선택
+        // 기본 계좌 자동 선택 함수
+        function selectDefaultAccount() {
+            if (myAccounts && myAccounts.length > 0) {
+                // 주계좌를 찾거나 첫 번째 계좌를 기본으로 선택
+                const primaryAccount = myAccounts.find(acc => acc.isPrimary) || myAccounts[0];
+                if (primaryAccount) {
+                    selectSenderAccount(primaryAccount.accountNumber, primaryAccount.accountName, primaryAccount.balance);
+                    console.log('기본 계좌 자동 선택:', primaryAccount);
+                }
+            }
+        }
+        
         function selectSenderAccount(accountNumber, accountName, balance) {
             selectedSenderAccount = {
                 accountNumber: accountNumber,
@@ -1736,9 +1818,34 @@
             
             // 선택한 계좌 정보 표시
             updateSenderAccountDisplay();
-            toggleMyAccounts();
+            
+            // 내 계좌 목록 닫기
+            const accountsList = document.getElementById('myAccountsList');
+            if (accountsList) {
+                accountsList.classList.remove('show');
+                accountsList.style.display = 'none';
+            }
+            
+            // 모든 계좌 아이템의 선택 상태 업데이트
+            updateAccountSelection();
+            
+            // 내 계좌 목록 다시 렌더링하여 선택 상태 반영
+            renderMyAccounts();
             
             console.log('송금 계좌 선택:', selectedSenderAccount);
+        }
+        
+        // 계좌 선택 상태 UI 업데이트
+        function updateAccountSelection() {
+            const accountItems = document.querySelectorAll('.account-item');
+            accountItems.forEach(item => {
+                const accountNumber = item.getAttribute('data-account-number');
+                if (accountNumber === selectedSenderAccount.accountNumber) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
         }
         
         // 선택한 송금 계좌 정보 표시 업데이트

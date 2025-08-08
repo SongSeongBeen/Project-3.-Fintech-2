@@ -30,6 +30,12 @@ document.addEventListener('DOMContentLoaded', function() {
     loadBalance();
     loadAlarms();
     loadTransactions();
+    
+    // 계좌 잔액 업데이트 이벤트 리스너 추가
+    window.addEventListener('accountBalanceUpdated', function() {
+        console.log('계좌 잔액 업데이트 이벤트 수신, 알림 페이지 새로고침');
+        loadBalance(); // 잔액 새로고침
+    });
 });
 
 // 페이징 관련 변수
@@ -182,17 +188,10 @@ async function tryRefreshToken() {
 // 잔액 로드
 async function loadBalance() {
     const token = localStorage.getItem('accessToken');
-    const accountNumber = localStorage.getItem('accountNumber');
-    
-    if (!accountNumber) {
-        document.getElementById('currentBalance').textContent = '계좌번호 없음';
-        document.getElementById('accountInfo').textContent = '계좌번호: -';
-        console.warn('Account number not found in localStorage');
-        return;
-    }
     
     try {
-        const response = await fetch(`/api/accounts/${accountNumber}/balance`, {
+        // 다중 계좌 목록 조회
+        const response = await fetch('/api/user-accounts', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,
@@ -201,16 +200,42 @@ async function loadBalance() {
         });
         
         if (response.ok) {
-            const data = await response.json();
-            const balance = new Intl.NumberFormat('ko-KR').format(data.balance);
-            document.getElementById('currentBalance').textContent = `${balance}원`;
-            document.getElementById('accountInfo').textContent = `계좌번호: ${accountNumber}`;
-        } else if (response.status === 404) {
-            document.getElementById('currentBalance').textContent = '계좌를 찾을 수 없음';
-            document.getElementById('accountInfo').textContent = `계좌번호: ${accountNumber}`;
+            const result = await response.json();
+            const accounts = result.accounts || [];
+            
+            // 기본 계좌 찾기 (isPrimary가 true인 계좌)
+            const primaryAccount = accounts.find(account => account.isPrimary);
+            
+            if (primaryAccount) {
+                const balance = primaryAccount.balance || 0;
+                const accountNumber = primaryAccount.accountNumber || 'N/A';
+                const accountName = primaryAccount.accountName || '기본계좌';
+                
+                // 잔액 표시
+                document.getElementById('currentBalance').textContent = 
+                    new Intl.NumberFormat('ko-KR').format(balance) + '원';
+                document.getElementById('accountInfo').textContent = 
+                    `${accountName}: ${accountNumber}`;
+                    
+                console.log('기본 계좌 조회 성공:', { balance, accountNumber, accountName });
+            } else if (accounts.length > 0) {
+                // 기본 계좌가 없으면 첫 번째 계좌 사용
+                const firstAccount = accounts[0];
+                const balance = firstAccount.balance || 0;
+                const accountNumber = firstAccount.accountNumber || 'N/A';
+                const accountName = firstAccount.accountName || '계좌';
+                
+                document.getElementById('currentBalance').textContent = 
+                    new Intl.NumberFormat('ko-KR').format(balance) + '원';
+                document.getElementById('accountInfo').textContent = 
+                    `${accountName}: ${accountNumber}`;
+            } else {
+                document.getElementById('currentBalance').textContent = '계좌 없음';
+                document.getElementById('accountInfo').textContent = '계좌를 먼저 생성해주세요';
+            }
         } else {
             document.getElementById('currentBalance').textContent = '잔액 조회 실패';
-            document.getElementById('accountInfo').textContent = `계좌번호: ${accountNumber}`;
+            document.getElementById('accountInfo').textContent = '계좌번호: -';
         }
     } catch (error) {
         console.error('Balance load error:', error);
