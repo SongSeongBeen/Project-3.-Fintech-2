@@ -14,9 +14,9 @@ import fintech2.easypay.audit.service.AuditLogService;
 import fintech2.easypay.audit.service.NotificationService;
 import fintech2.easypay.transfer.entity.Transfer;
 import fintech2.easypay.transfer.entity.TransferStatus;
-import fintech2.easypay.transfer.external.BankingApiResponse;
-import fintech2.easypay.transfer.external.BankingApiService;
-import fintech2.easypay.transfer.external.BankingApiStatus;
+import fintech2.easypay.transfer.client.BankingApiResponse;
+import fintech2.easypay.transfer.client.BankingApiService;
+import fintech2.easypay.transfer.client.BankingApiStatus;
 import fintech2.easypay.transfer.repository.TransferRepository;
 
 import java.time.LocalDateTime;

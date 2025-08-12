@@ -1,4 +1,4 @@
-package fintech2.easypay.transfer.external;
+package fintech2.easypay.transfer.client;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

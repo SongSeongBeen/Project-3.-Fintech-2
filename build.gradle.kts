@@ -73,6 +73,7 @@ dependencies {
 	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.security:spring-security-test")
+	testImplementation("com.tngtech.archunit:archunit-junit5:1.2.1")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	
 	// Gatling 성능 테스트

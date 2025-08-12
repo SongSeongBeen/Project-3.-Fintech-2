@@ -1,4 +1,4 @@
-package fintech2.easypay.transfer.external;
+package fintech2.easypay.transfer.client;
 
 /**
  * 외부 뱅킹 API 처리 상태

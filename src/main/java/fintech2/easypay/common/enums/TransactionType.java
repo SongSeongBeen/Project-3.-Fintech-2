@@ -7,5 +7,6 @@ public enum TransactionType {
     TRANSFER_IN,  // 송금 입금
     TRANSFER_OUT, // 송금 출금
     PAYMENT,    // 결제
-    REFUND      // 환불
+    REFUND,     // 환불
+    FEE         // 수수료
 } 

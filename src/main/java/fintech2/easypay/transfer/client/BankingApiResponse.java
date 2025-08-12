@@ -1,4 +1,4 @@
-package fintech2.easypay.transfer.external;
+package fintech2.easypay.transfer.client;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

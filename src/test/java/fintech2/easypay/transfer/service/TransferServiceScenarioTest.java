@@ -12,9 +12,9 @@ import fintech2.easypay.transfer.dto.TransferRequest;
 import fintech2.easypay.transfer.dto.TransferResponse;
 import fintech2.easypay.transfer.entity.Transfer;
 import fintech2.easypay.transfer.entity.TransferStatus;
-import fintech2.easypay.transfer.external.BankingApiResponse;
-import fintech2.easypay.transfer.external.BankingApiService;
-import fintech2.easypay.transfer.external.BankingApiStatus;
+import fintech2.easypay.transfer.client.BankingApiResponse;
+import fintech2.easypay.transfer.client.BankingApiService;
+import fintech2.easypay.transfer.client.BankingApiStatus;
 import fintech2.easypay.transfer.repository.TransferRepository;
 import org.springframework.context.ApplicationContext;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,6 +48,9 @@ class TransferServiceScenarioTest {
     @Mock private BalanceService balanceService;
     @Mock private ApplicationContext applicationContext;
     @Mock private fintech2.easypay.account.service.UserAccountService userAccountService;
+    @Mock private TransferValidationService validationService;
+    @Mock private fintech2.easypay.transfer.support.id.TransactionIdGenerator transactionIdGenerator;
+    @Mock private fintech2.easypay.account.ledger.LedgerService ledgerService;
 
     private TransferService transferService;
 
@@ -78,7 +81,10 @@ class TransferServiceScenarioTest {
             auditLogService,
             notificationService,
             bankingApiService,
-            applicationContext
+            applicationContext,
+            validationService,
+            transactionIdGenerator,
+            ledgerService
         );
 
         // Given: 가상 사용자 데이터 생성

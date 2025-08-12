@@ -60,8 +60,21 @@ public class Transfer extends BaseEntity {
     @Column(name = "failed_reason")
     private String failedReason;
     
-    public void markAsProcessing() {
+    public Transfer markAsPending() {
+        this.status = TransferStatus.REQUESTED;
+        return this;
+    }
+    
+    public Transfer markAsProcessing() {
         this.status = TransferStatus.PROCESSING;
+        return this;
+    }
+    
+    public Transfer markAsCompleted(String bankTxId) {
+        this.status = TransferStatus.COMPLETED;
+        this.bankTransactionId = bankTxId;
+        this.processedAt = LocalDateTime.now();
+        return this;
     }
     
     public void markAsCompleted() {
@@ -73,27 +86,31 @@ public class Transfer extends BaseEntity {
         this.bankTransactionId = bankTransactionId;
     }
     
-    public void markAsFailed(String reason) {
+    public Transfer markAsFailed(String reason) {
         this.status = TransferStatus.FAILED;
         this.failedReason = reason;
         this.processedAt = LocalDateTime.now();
+        return this;
     }
     
-    public void markAsCancelled() {
+    public Transfer markAsCancelled() {
         this.status = TransferStatus.CANCELLED;
         this.processedAt = LocalDateTime.now();
+        return this;
     }
     
-    public void markAsTimeout(String reason) {
+    public Transfer markAsTimeout(String reason) {
         this.status = TransferStatus.TIMEOUT;
         this.failedReason = reason;
         this.processedAt = LocalDateTime.now();
+        return this;
     }
     
-    public void markAsUnknown(String reason) {
+    public Transfer markAsUnknown(String reason) {
         this.status = TransferStatus.UNKNOWN;
         this.failedReason = reason;
         this.processedAt = LocalDateTime.now();
+        return this;
     }
     
     public boolean isCompleted() {

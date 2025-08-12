@@ -18,18 +18,25 @@ public enum ErrorCode {
     INVALID_CREDENTIALS("M003", "아이디 또는 비밀번호가 잘못되었습니다."),
     LOGIN_FAILED("M004", "로그인에 실패했습니다."),
     MEMBER_ALREADY_DELETED("M005", "이미 탈퇴한 회원입니다."),
+    USER_NOT_ACTIVE("M006", "사용자 계정이 비활성 상태입니다."),
+    PHONE_NOT_VERIFIED("M007", "전화번호가 인증되지 않았습니다."),
     
     // 계좌 관련 오류
     ACCOUNT_NOT_FOUND("A001", "계좌를 찾을 수 없습니다."),
     INSUFFICIENT_BALANCE("A002", "잔액이 부족합니다."),
     INVALID_ACCOUNT_NUMBER("A003", "잘못된 계좌번호입니다."),
     ACCOUNT_CREATION_FAILED("A004", "계좌 생성에 실패했습니다."),
+    ACCOUNT_NOT_ACTIVE("A005", "계좌가 활성 상태가 아닙니다."),
+    ACCOUNT_FROZEN("A006", "계좌가 동결되어 있습니다."),
     
     // 거래 관련 오류
     TRANSACTION_FAILED("T001", "거래 처리에 실패했습니다."),
     INVALID_AMOUNT("T002", "유효하지 않은 금액입니다."),
     SAME_ACCOUNT_TRANSFER("T003", "같은 계좌로는 송금할 수 없습니다."),
     TRANSACTION_NOT_FOUND("T004", "거래 내역을 찾을 수 없습니다."),
+    EXCEEDS_LIMIT("T005", "한도를 초과했습니다."),
+    EXCEEDS_DAILY_LIMIT("T006", "일일 한도를 초과했습니다."),
+    UNSUPPORTED_TRANSFER_TYPE("T007", "지원하지 않는 송금 타입입니다."),
     
     // 결제 관련 오류
     PAYMENT_FAILED("P001", "결제에 실패했습니다."),
