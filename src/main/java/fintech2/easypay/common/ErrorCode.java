@@ -42,6 +42,27 @@ public enum ErrorCode {
     PAYMENT_CANNOT_BE_REFUNDED("P008", "환불할 수 없는 결제입니다."),
     INVALID_REFUND_AMOUNT("P009", "유효하지 않은 환불 금액입니다."),
     
+    // PIN 인증 관련 오류
+    PIN_NOT_SET("PIN001", "PIN이 설정되지 않았습니다."),
+    PIN_ALREADY_SET("PIN002", "이미 PIN이 설정되어 있습니다."),
+    INVALID_PIN("PIN003", "PIN이 일치하지 않습니다."),
+    PIN_LOCKED("PIN004", "PIN이 잠금되었습니다."),
+    INVALID_PIN_FORMAT("PIN005", "PIN은 6자리 숫자여야 합니다."),
+    INVALID_PIN_SESSION("PIN006", "PIN 인증 세션이 유효하지 않습니다."),
+    PIN_SESSION_EXPIRED("PIN007", "PIN 인증 세션이 만료되었습니다."),
+    
+    // 예약 송금 관련 오류
+    SCHEDULE_NOT_FOUND("SCH001", "예약 송금을 찾을 수 없습니다."),
+    SCHEDULE_ALREADY_CANCELLED("SCH002", "이미 취소된 예약 송금입니다."),
+    SCHEDULE_ALREADY_COMPLETED("SCH003", "이미 완료된 예약 송금입니다."),
+    INVALID_SCHEDULE_TIME("SCH004", "유효하지 않은 예약 시간입니다."),
+    SCHEDULE_LIMIT_EXCEEDED("SCH005", "예약 송금 개수 제한을 초과했습니다."),
+    INVALID_REPEAT_CYCLE("SCH006", "유효하지 않은 반복 주기입니다."),
+    DUPLICATE_TRANSFER("DUP001", "중복된 송금 요청입니다."),
+    INVALID_PHONE_NUMBER("VER001", "유효하지 않은 전화번호입니다."),
+    LIMIT_EXCEEDED("LIM001", "한도를 초과했습니다."),
+    INVALID_STATUS("ST001", "유효하지 않은 상태입니다."),
+    
     // 시스템 오류
     INTERNAL_SERVER_ERROR("S001", "내부 서버 오류가 발생했습니다."),
     DATABASE_ERROR("S002", "데이터베이스 오류가 발생했습니다."),

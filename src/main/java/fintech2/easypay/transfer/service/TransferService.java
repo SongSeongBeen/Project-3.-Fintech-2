@@ -257,6 +257,7 @@ public class TransferService {
         Page<Transfer> transfers = transferRepository.findByReceiverIdOrderByCreatedAtDesc(member.getId(), pageable);
         return transfers.map(TransferResponse::from);
     }
+
     
     /**
      * 고유한 거래 ID 생성
