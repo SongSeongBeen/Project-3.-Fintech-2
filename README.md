@@ -303,11 +303,11 @@ Resolves: #123
 
 ### ✨ feature
 - **용도**: 개발을 위한 브랜치
-- **명명 규칙**: `feature/{작업자이름}/{작업내용}`
+- **명명 규칙**: `feat/{작업자이름}/{작업내용}`
 - **예시**:
-   - `feature/songseongbeen/payment-transfer-implementation`
-   - `feature/csh/250409-menu-error-fix`
-   - `feature/john/user-authentication`
+   - `feat/songseongbeen/payment-transfer-implementation`
+   - `feat/csh/250409-menu-error-fix`
+   - `feat/john/user-authentication`
 - **작업 흐름**:
    1. develop 브랜치에서 생성
    2. 기능 개발 완료
